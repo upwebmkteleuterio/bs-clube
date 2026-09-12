@@ -22,9 +22,6 @@ export function useResultadosRanking() {
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
   const [alertConfig, setAlertConfig] = useState<{ title: string; msg: string } | null>(null);
 
-  const rankingGameId = selectedGameId || games[0]?.id;
-  const { data: participants = [], isLoading: isLoadingParticipants } = useRankings(rankingGameId);
-
   // Active draw defaults to the latest draw if not set
   const activeDraw: OfficialDraw | null = useMemo(() => {
     if (draws.length === 0) return null;
@@ -34,24 +31,17 @@ export function useResultadosRanking() {
     return draws[0];
   }, [draws, selectedDrawId]);
 
-  const activeDrawnNumbers = useMemo(() => {
-    return activeDraw ? activeDraw.dezenas : [];
-  }, [activeDraw]);
+  const rankingGameId = selectedGameId || games[0]?.id;
+  const { data: participants = [], isLoading: isLoadingParticipants } = useRankings(
+    rankingGameId,
+    activeDraw?.id,
+  );
 
-  // Compute hits and rank participants
+  // Hits are calculated by the ranking RPC from the selected official draw.
   const ranking = useMemo(() => {
     if (!participants || participants.length === 0) return [];
 
-    let processed = participants.map((p) => {
-      let hits = 0;
-      p.numbers.forEach((num) => {
-        if (activeDrawnNumbers.includes(num)) {
-          hits++;
-        }
-      });
-      return { ...p, hits };
-    });
-
+    let processed = [...participants];
     processed.sort((a, b) => {
       if (b.hits !== a.hits) return b.hits - a.hits;
       return a.name.localeCompare(b.name);
@@ -63,7 +53,7 @@ export function useResultadosRanking() {
       );
     }
     return processed;
-  }, [participants, activeDrawnNumbers, searchTerm]);
+  }, [participants, searchTerm]);
 
   const activeGame: Game | null = useMemo(() => {
     return games.find((g) => g.id === rankingGameId) || null;
@@ -84,7 +74,6 @@ export function useResultadosRanking() {
     selectedDrawId,
     setSelectedDrawId,
     activeDraw,
-    activeDrawnNumbers,
     activeGame,
     ranking,
     searchTerm,

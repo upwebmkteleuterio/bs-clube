@@ -32,9 +32,8 @@ export interface RankingParticipant {
   gameId: string;
   name: string;
   initials: string;
-  numbers: number[];
   isMe?: boolean;
-  hits?: number;
+  hits: number;
 }
 
 export interface UserTransaction {

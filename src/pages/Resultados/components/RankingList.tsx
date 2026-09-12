@@ -2,16 +2,11 @@ import React from 'react';
 import { RankingParticipant } from '../../../types';
 
 interface RankingListProps {
-  ranking: (RankingParticipant & { hits?: number })[];
-  activeDrawnNumbers: number[];
+  ranking: RankingParticipant[];
   isLoading?: boolean;
 }
 
-export default function RankingList({
-  ranking,
-  activeDrawnNumbers,
-  isLoading,
-}: RankingListProps) {
+export default function RankingList({ ranking, isLoading }: RankingListProps) {
   if (isLoading) {
     return (
       <div className="bg-slate-900/40 border border-slate-800/80 rounded-[2rem] p-4 sm:p-6 space-y-3 animate-pulse">
@@ -109,22 +104,11 @@ export default function RankingList({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between sm:justify-end sm:space-x-2">
-                  <span className="text-[10px] text-slate-500 sm:hidden">Dezenas:</span>
-                  <div className="flex space-x-1.5 sm:space-x-2">
-                    {p.numbers.map((num, i) => {
-                      const isMatch = activeDrawnNumbers.includes(num);
-                      return (
-                        <div
-                          key={i}
-                          className={`rank-ball ${isMatch ? 'match' : ''}`}
-                          title={isMatch ? `Acerto! Dezena ${num}` : `Dezena ${num}`}
-                        >
-                          {num.toString().padStart(2, '0')}
-                        </div>
-                      );
-                    })}
-                  </div>
+                <div className="flex items-center justify-end sm:space-x-2">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                    Resultado oficial
+                  </span>
+                  <i className="fa-solid fa-shield-halved text-emerald-500/70" aria-hidden="true"></i>
                 </div>
               </div>
             );

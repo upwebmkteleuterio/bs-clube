@@ -141,7 +141,7 @@ export const walletService = {
       id: String(row.id),
       type: 'withdraw',
       title: 'Saque Solicitado',
-      date: row.created_at ?? new Date().toISOString(),
+      date: row.created_at ?? '',
       value: -Math.abs(Number(row.amount ?? amount)),
       status: row.status ?? 'pending',
       pixKeyType,

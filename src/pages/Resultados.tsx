@@ -16,7 +16,6 @@ export default function Resultados() {
     selectedDrawId,
     setSelectedDrawId,
     activeDraw,
-    activeDrawnNumbers,
     ranking,
     searchTerm,
     setSearchTerm,
@@ -78,11 +77,7 @@ export default function Resultados() {
             onSearchChange={(term) => setSearchTerm(term)}
           />
 
-          <RankingList
-            ranking={ranking}
-            activeDrawnNumbers={activeDrawnNumbers}
-            isLoading={isLoading}
-          />
+          <RankingList ranking={ranking} isLoading={isLoading} />
         </section>
       </main>
 

@@ -182,14 +182,31 @@ export const adminService = {
 
   async executeManualDraw(input: ManualDrawInput): Promise<{ message: string; drawnNumbers: number[] }> {
     await requireAdmin();
-    const { error } = await supabase.from('draws').insert({
-      contest: input.concurso.trim(),
+    const contest = input.concurso.trim();
+    const drawData = {
+      contest,
       draw_date: toIsoDate(input.data),
       location: 'Caixa Econômica Federal',
       numbers: input.dezenas,
       is_published: true,
-    });
-    if (error) throw error;
+    };
+    const { data: existingDraw, error: lookupError } = await supabase
+      .from('draws')
+      .select('id')
+      .eq('contest', contest)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (lookupError) throw lookupError;
+
+    if (existingDraw) {
+      const { error } = await supabase.from('draws').update(drawData).eq('id', existingDraw.id);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from('draws').insert(drawData);
+      if (error) throw error;
+    }
+
     return {
       message: `Concurso #${input.concurso} registrado com sucesso.`,
       drawnNumbers: input.dezenas,
