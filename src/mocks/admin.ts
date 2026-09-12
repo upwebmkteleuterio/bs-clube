@@ -1,0 +1,141 @@
+import {
+  AdminWithdrawal,
+  AdminUser,
+  AdminCategory,
+  AdminFinancialMetrics,
+} from '../types';
+
+export const initialAdminWithdrawals: AdminWithdrawal[] = [
+  {
+    id: 'SQ-9982',
+    user: 'Marcos Almeida',
+    amount: 3200.0,
+    date: '12/08/2026 14:30',
+    pixKey: '123.456.789-00',
+    pixType: 'CPF',
+    status: 'pending',
+  },
+  {
+    id: 'SQ-8812',
+    user: 'Fernanda Costa',
+    amount: 150.0,
+    date: '12/08/2026 10:15',
+    pixKey: '(21) 98888-7777',
+    pixType: 'Telefone',
+    status: 'pending',
+  },
+  {
+    id: 'SQ-7102',
+    user: 'Roberto Nogueira',
+    amount: 850.5,
+    date: '11/08/2026 18:45',
+    pixKey: 'roberto@email.com',
+    pixType: 'E-mail',
+    status: 'pending',
+  },
+];
+
+export const initialAdminUsers: AdminUser[] = [
+  {
+    id: 101,
+    name: 'Marcos Almeida',
+    phone: '(11) 99999-8888',
+    balance: 3200.0,
+    bonus: 50.0,
+    active: true,
+    createdAt: '01/05/2026',
+  },
+  {
+    id: 102,
+    name: 'Fernanda Costa',
+    phone: '(21) 98888-7777',
+    balance: 150.0,
+    bonus: 10.0,
+    active: true,
+    createdAt: '15/06/2026',
+  },
+  {
+    id: 103,
+    name: 'Roberto Nogueira',
+    phone: '(31) 97777-6666',
+    balance: 850.5,
+    bonus: 0.0,
+    active: true,
+    createdAt: '20/06/2026',
+  },
+  {
+    id: 104,
+    name: 'Ana Souza',
+    phone: '(41) 96666-5555',
+    balance: 0.0,
+    bonus: 20.0,
+    active: true,
+    createdAt: '10/07/2026',
+  },
+  {
+    id: 105,
+    name: 'João Pedro',
+    phone: '(51) 95555-4444',
+    balance: 45.0,
+    bonus: 5.0,
+    active: false,
+    createdAt: '22/07/2026',
+  },
+  {
+    id: 106,
+    name: 'Camila Rocha',
+    phone: '(11) 98765-4321',
+    balance: 1240.0,
+    bonus: 30.0,
+    active: true,
+    createdAt: '05/08/2026',
+  },
+];
+
+export const initialAdminCategories: AdminCategory[] = [
+  {
+    id: 1,
+    name: 'Sorteio BIG 10',
+    cota: 10.0,
+    vagas: 100,
+    filled: 45,
+    drawDate: '15/08/2026',
+    status: 'em_andamento',
+  },
+  {
+    id: 2,
+    name: 'Sorteio BIG 20',
+    cota: 20.0,
+    vagas: 80,
+    filled: 80,
+    drawDate: '15/08/2026',
+    status: 'concluido',
+  },
+  {
+    id: 3,
+    name: 'Sorteio BIG 50',
+    cota: 50.0,
+    vagas: 50,
+    filled: 12,
+    drawDate: '18/08/2026',
+    status: 'em_andamento',
+  },
+  {
+    id: 4,
+    name: 'Sorteio PRO 100',
+    cota: 100.0,
+    vagas: 20,
+    filled: 0,
+    drawDate: '20/08/2026',
+    status: 'inativo',
+  },
+];
+
+export const initialAdminMetrics: AdminFinancialMetrics = {
+  totalArrecadado: 145200.0,
+  lucroRetido: 31944.0,
+  lucroPercent: 22,
+  premiosPagos: 113256.0,
+  premiosPercent: 78,
+  apostadoresAtivos: 4892,
+};

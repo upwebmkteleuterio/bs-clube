@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix BS Clube",
+  "description": "Plataforma de bolões estilo Sit & Go com ranking e apuração ao vivo da Mega-Sena.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
