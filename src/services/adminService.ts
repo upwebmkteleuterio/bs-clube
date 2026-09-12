@@ -47,8 +47,18 @@ function mapCategory(row: Row): AdminCategory {
   };
 }
 
+async function requireAdmin() {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  if (!authData.user) throw new Error('É necessário estar autenticado.');
+  const { data: isAdmin, error } = await supabase.rpc('is_admin');
+  if (error) throw error;
+  if (isAdmin !== true) throw new Error('Acesso administrativo necessário.');
+}
+
 export const adminService = {
   async getMetrics(): Promise<AdminFinancialMetrics> {
+    await requireAdmin();
     // Esta é uma consulta administrativa global, autorizada somente pelas políticas/RPCs de admin.
     const [{ data: payments, error: paymentsError }, { data: ledger, error: ledgerError }, { count, error: usersError }] = await Promise.all([
       supabase.from('payments').select('amount, kind, status'),
@@ -73,6 +83,7 @@ export const adminService = {
   },
 
   async getWithdrawals(): Promise<AdminWithdrawal[]> {
+    await requireAdmin();
     // Consulta global excepcional: a RLS deve restringir esta leitura ao papel admin.
     const { data, error } = await supabase.from('withdrawals').select('*').order('created_at', { ascending: false });
     if (error) throw error;
@@ -80,18 +91,21 @@ export const adminService = {
   },
 
   async approveWithdrawal(id: string): Promise<AdminWithdrawal> {
+    await requireAdmin();
     const { data, error } = await supabase.rpc('approve_withdrawal', { p_withdrawal_id: id });
     if (error) throw error;
     return mapWithdrawal(Array.isArray(data) ? data[0] : data);
   },
 
   async rejectWithdrawal(id: string): Promise<AdminWithdrawal> {
+    await requireAdmin();
     const { data, error } = await supabase.rpc('reject_withdrawal', { p_withdrawal_id: id });
     if (error) throw error;
     return mapWithdrawal(Array.isArray(data) ? data[0] : data);
   },
 
   async getUsers(): Promise<AdminUser[]> {
+    await requireAdmin();
     // Consulta administrativa global excepcional, protegida por RLS/política de admin.
     const { data, error } = await supabase.from('profiles').select('*, wallet_accounts(total, bonus)').order('created_at', { ascending: false });
     if (error) throw error;
@@ -102,6 +116,7 @@ export const adminService = {
   },
 
   async toggleUserStatus(id: number | string): Promise<AdminUser> {
+    await requireAdmin();
     const { error } = await supabase.rpc('toggle_user_status', { p_user_id: String(id) });
     if (error) throw error;
     const { data, error: readError } = await supabase
@@ -115,12 +130,14 @@ export const adminService = {
   },
 
   async getCategories(): Promise<AdminCategory[]> {
+    await requireAdmin();
     const { data, error } = await supabase.from('pool_categories').select('*, pools(*, draws(draw_date))').order('created_at', { ascending: false });
     if (error) throw error;
     return (data ?? []).map(mapCategory);
   },
 
   async createCategory(data: { name: string; cota: number; vagas: number; drawDate: string }): Promise<AdminCategory> {
+    await requireAdmin();
     const slug = data.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const { data: category, error: categoryError } = await supabase.from('pool_categories').insert({ name: data.name.trim(), slug, status: 'active' }).select('*').single();
     if (categoryError) throw categoryError;
@@ -154,6 +171,7 @@ export const adminService = {
   },
 
   async updateCategory(id: number | string, data: Partial<AdminCategory>): Promise<AdminCategory> {
+    await requireAdmin();
     const patch: Record<string, unknown> = {};
     if (data.name !== undefined) patch.name = data.name.trim();
     if (data.status !== undefined) patch.status = data.status === 'inativo' ? 'inactive' : 'active';
@@ -163,6 +181,7 @@ export const adminService = {
   },
 
   async executeManualDraw(input: ManualDrawInput): Promise<{ message: string; drawnNumbers: number[] }> {
+    await requireAdmin();
     const { error } = await supabase.from('draws').insert({
       contest: input.concurso.trim(),
       draw_date: toIsoDate(input.data),

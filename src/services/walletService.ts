@@ -28,10 +28,10 @@ function mapLedgerEntry(row: Row): UserTransaction {
 
 function mapPayment(row: Row): UserTransaction {
   return {
-    id: String(row.id ?? row.external_id ?? crypto.randomUUID()),
+    id: String(row.id ?? row.external_id ?? ''),
     type: row.kind === 'withdraw' ? 'withdraw' : 'deposit',
     title: row.kind === 'withdraw' ? 'Saque Solicitado' : 'Depósito Pix',
-    date: row.created_at ?? new Date().toISOString(),
+    date: row.created_at ?? '',
     value: Number(row.amount ?? 0),
     status: row.status ?? 'pending',
   };
@@ -42,7 +42,7 @@ function mapWithdrawal(row: Row): UserTransaction {
     id: String(row.id),
     type: 'withdraw',
     title: 'Saque Solicitado',
-    date: row.created_at ?? new Date().toISOString(),
+    date: row.created_at ?? '',
     value: -Math.abs(Number(row.amount ?? 0)),
     status: row.status ?? 'pending',
     pixKeyType: row.pix_key_type,

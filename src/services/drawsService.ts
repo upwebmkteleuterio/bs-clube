@@ -13,6 +13,15 @@ function mapDraw(row: DrawRow): OfficialDraw {
   };
 }
 
+async function requireAdmin() {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  if (!authData.user) throw new Error('É necessário estar autenticado.');
+  const { data: isAdmin, error } = await supabase.rpc('is_admin');
+  if (error) throw error;
+  if (isAdmin !== true) throw new Error('Acesso administrativo necessário.');
+}
+
 export const drawsService = {
   async getAll(): Promise<OfficialDraw[]> {
     const { data, error } = await supabase
@@ -43,6 +52,7 @@ export const drawsService = {
   },
 
   async create(drawData: Omit<OfficialDraw, 'id'>): Promise<OfficialDraw> {
+    await requireAdmin();
     const { data, error } = await supabase
       .from('draws')
       .insert({
@@ -59,6 +69,7 @@ export const drawsService = {
   },
 
   async update(id: string, updates: Partial<OfficialDraw>): Promise<OfficialDraw> {
+    await requireAdmin();
     const patch: Record<string, unknown> = {};
     if (updates.concurso !== undefined) patch.contest = updates.concurso;
     if (updates.data !== undefined) patch.draw_date = updates.data;
@@ -70,6 +81,7 @@ export const drawsService = {
   },
 
   async delete(id: string): Promise<boolean> {
+    await requireAdmin();
     const { error } = await supabase.from('draws').delete().eq('id', id);
     if (error) throw error;
     return true;

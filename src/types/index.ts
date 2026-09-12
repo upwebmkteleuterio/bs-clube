@@ -83,13 +83,14 @@ export interface UserBet {
 
 export interface UserProfile {
   id: string;
-  name: string;
-  nickname: string;
-  phone: string;
-  balanceTotal: number;
-  balanceWithdrawable: number;
-  balanceBonus: number;
+  fullName: string | null;
+  phone: string | null;
+  avatarUrl: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
+
+export type ProfileUpdate = Pick<UserProfile, 'fullName' | 'phone' | 'avatarUrl'>;
 
 export interface AdminWithdrawal {
   id: string;

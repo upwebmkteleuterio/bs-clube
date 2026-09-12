@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../contexts/AuthContext';
 import { adminService } from '../services/adminService';
 import { ManualDrawInput } from '../types';
 
@@ -8,17 +9,21 @@ export const ADMIN_USERS_KEY = ['admin', 'users'];
 export const ADMIN_CATEGORIES_KEY = ['admin', 'categories'];
 
 export function useAdminMetrics() {
+  const { user, role } = useAuth();
   return useQuery({
     queryKey: ADMIN_METRICS_KEY,
     queryFn: () => adminService.getMetrics(),
+    enabled: Boolean(user) && role === 'admin',
     staleTime: 1000 * 30,
   });
 }
 
 export function useAdminWithdrawals() {
+  const { user, role } = useAuth();
   return useQuery({
     queryKey: ADMIN_WITHDRAWALS_KEY,
     queryFn: () => adminService.getWithdrawals(),
+    enabled: Boolean(user) && role === 'admin',
     staleTime: 1000 * 30,
   });
 }
@@ -45,9 +50,11 @@ export function useRejectWithdrawal() {
 }
 
 export function useAdminUsers() {
+  const { user, role } = useAuth();
   return useQuery({
     queryKey: ADMIN_USERS_KEY,
     queryFn: () => adminService.getUsers(),
+    enabled: Boolean(user) && role === 'admin',
     staleTime: 1000 * 30,
   });
 }
@@ -58,14 +65,17 @@ export function useToggleUserStatus() {
     mutationFn: (id: number | string) => adminService.toggleUserStatus(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_USERS_KEY });
+      queryClient.invalidateQueries({ queryKey: ADMIN_METRICS_KEY });
     },
   });
 }
 
 export function useAdminCategories() {
+  const { user, role } = useAuth();
   return useQuery({
     queryKey: ADMIN_CATEGORIES_KEY,
     queryFn: () => adminService.getCategories(),
+    enabled: Boolean(user) && role === 'admin',
     staleTime: 1000 * 30,
   });
 }

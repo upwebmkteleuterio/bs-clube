@@ -1,19 +1,47 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useProfile, useUpdateProfile } from '../hooks/useProfile';
 import { useWalletBalance, useWalletTransactions } from '../hooks/useWallet';
 
 export default function Perfil() {
   const navigate = useNavigate();
   const { user, role, signOut } = useAuth();
+  const { data: profile, isLoading: isProfileLoading } = useProfile();
+  const updateProfile = useUpdateProfile();
   const { data: balance } = useWalletBalance();
   const { data: transactions = [] } = useWalletTransactions();
+  const [fullName, setFullName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [avatarUrl, setAvatarUrl] = useState('');
+  const [profileMessage, setProfileMessage] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const balanceTotal = balance?.total ?? 0;
   const balanceWithdrawable = balance?.withdrawable ?? 0;
-  const displayName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Apostador';
+  const displayName = profile?.fullName || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Apostador';
+  const safeAvatarUrl = profile?.avatarUrl && /^https?:\/\//i.test(profile.avatarUrl) ? profile.avatarUrl : null;
+
+  useEffect(() => {
+    if (!profile) return;
+    setFullName(profile.fullName ?? '');
+    setPhone(profile.phone ?? '');
+    setAvatarUrl(profile.avatarUrl ?? '');
+  }, [profile]);
 
   const handleSignOut = async () => {
     await signOut();
     navigate('/login', { replace: true });
+  };
+
+  const handleSaveProfile = async () => {
+    setProfileMessage(null);
+    setProfileError(null);
+    try {
+      await updateProfile.mutateAsync({ fullName, phone, avatarUrl });
+      setProfileMessage('Dados do perfil atualizados.');
+    } catch (error) {
+      setProfileError(error instanceof Error ? error.message : 'Não foi possível atualizar o perfil.');
+    }
   };
 
   return (
@@ -34,8 +62,8 @@ export default function Perfil() {
 
       <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
         <div className="flex items-center space-x-4">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-emerald-900/40">
-            {displayName.substring(0, 2).toUpperCase()}
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-emerald-900/40 overflow-hidden">
+            {safeAvatarUrl ? <img src={safeAvatarUrl} alt="Avatar do perfil" className="h-full w-full object-cover" /> : displayName.substring(0, 2).toUpperCase()}
           </div>
           <div>
             <div className="flex items-center space-x-2">
@@ -67,11 +95,29 @@ export default function Perfil() {
             <span className="text-[10px] text-slate-500 block uppercase">E-mail</span>
             <span className="text-sm font-semibold text-white break-all">{user?.email}</span>
           </div>
+          <div>
+            <label htmlFor="profile-full-name" className="text-[10px] text-slate-500 block uppercase mb-1">Nome completo</label>
+            <input id="profile-full-name" value={fullName} onChange={(event) => setFullName(event.target.value)} maxLength={200} disabled={isProfileLoading} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
+          </div>
+          <div>
+            <label htmlFor="profile-phone" className="text-[10px] text-slate-500 block uppercase mb-1">Telefone</label>
+            <input id="profile-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} maxLength={30} disabled={isProfileLoading} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
+          </div>
+          <div>
+            <label htmlFor="profile-avatar-url" className="text-[10px] text-slate-500 block uppercase mb-1">URL do avatar</label>
+            <input id="profile-avatar-url" type="url" value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} maxLength={500} placeholder="https://..." disabled={isProfileLoading} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
+          </div>
+          <div className="flex flex-col gap-2">
+            {profileError && <p className="text-xs text-rose-300" role="alert">{profileError}</p>}
+            {profileMessage && <p className="text-xs text-emerald-300" role="status">{profileMessage}</p>}
+            <button type="button" onClick={handleSaveProfile} disabled={isProfileLoading || updateProfile.isPending} className="w-full rounded-xl bg-emerald-500 py-2.5 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60">
+              {updateProfile.isPending ? 'Salvando...' : 'Salvar dados do perfil'}
+            </button>
+          </div>
           <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
             <span className="text-[10px] text-slate-500 block uppercase">Saldo Disponível para Saque</span>
             <span className="text-sm font-bold text-emerald-400 font-mono">R$ {balanceWithdrawable.toFixed(2).replace('.', ',')}</span>
           </div>
-          <p className="text-[11px] text-slate-500">Dados pessoais adicionais poderão ser editados na próxima fase.</p>
         </div>
 
         <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">

@@ -30,6 +30,15 @@ function mapPool(row: PoolRow): Game {
 
 const poolSelect = '*, pool_categories(name, slug), draws(contest, draw_date, location, numbers)';
 
+async function requireAdmin() {
+  const { data: authData, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  if (!authData.user) throw new Error('É necessário estar autenticado.');
+  const { data: isAdmin, error } = await supabase.rpc('is_admin');
+  if (error) throw error;
+  if (isAdmin !== true) throw new Error('Acesso administrativo necessário.');
+}
+
 export const gamesService = {
   async getAll(): Promise<Game[]> {
     const { data, error } = await supabase
@@ -48,6 +57,7 @@ export const gamesService = {
   },
 
   async create(gameData: Omit<Game, 'id'>): Promise<Game> {
+    await requireAdmin();
     const { data, error } = await supabase
       .from('pools')
       .insert({
@@ -71,6 +81,7 @@ export const gamesService = {
   },
 
   async update(id: string, updates: Partial<Game>): Promise<Game> {
+    await requireAdmin();
     const patch: Record<string, unknown> = {};
     if (updates.nome !== undefined) patch.name = updates.nome;
     if (updates.buyIn !== undefined) patch.buy_in = updates.buyIn;
@@ -88,6 +99,7 @@ export const gamesService = {
   },
 
   async delete(id: string): Promise<boolean> {
+    await requireAdmin();
     const { error } = await supabase.from('pools').delete().eq('id', id);
     if (error) throw error;
     return true;
