@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useAppStore } from '../../../store/useAppStore';
+import { useWalletBalance } from '../../../hooks/useWallet';
 import { useDraws } from '../../../hooks/useDraws';
 import { useGames } from '../../../hooks/useGames';
 import { useRankings } from '../../../hooks/useRankings';
@@ -10,19 +10,20 @@ import { OfficialDraw, Game } from '../../../types';
 export function useResultadosRanking() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const { balanceTotal } = useAppStore();
+  const { data: walletBalance } = useWalletBalance();
   const authMode = session ? 'auth' as const : 'guest' as const;
 
   const { data: draws = [], isLoading: isLoadingDraws } = useDraws();
   const { data: games = [], isLoading: isLoadingGames } = useGames();
 
-  const [selectedGameId, setSelectedGameId] = useState<string>('bolao-bronze');
+  const [selectedGameId, setSelectedGameId] = useState<string>('');
   const [selectedDrawId, setSelectedDrawId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
   const [alertConfig, setAlertConfig] = useState<{ title: string; msg: string } | null>(null);
 
-  const { data: participants = [], isLoading: isLoadingParticipants } = useRankings(selectedGameId);
+  const rankingGameId = selectedGameId || games[0]?.id;
+  const { data: participants = [], isLoading: isLoadingParticipants } = useRankings(rankingGameId);
 
   // Active draw defaults to the latest draw if not set
   const activeDraw: OfficialDraw | null = useMemo(() => {
@@ -65,8 +66,8 @@ export function useResultadosRanking() {
   }, [participants, activeDrawnNumbers, searchTerm]);
 
   const activeGame: Game | null = useMemo(() => {
-    return games.find((g) => g.id === selectedGameId) || null;
-  }, [games, selectedGameId]);
+    return games.find((g) => g.id === rankingGameId) || null;
+  }, [games, rankingGameId]);
 
   const openLogin = () => {
     setIsGuestModalOpen(false);
@@ -78,7 +79,7 @@ export function useResultadosRanking() {
   return {
     draws,
     games,
-    selectedGameId,
+    selectedGameId: rankingGameId || '',
     setSelectedGameId,
     selectedDrawId,
     setSelectedDrawId,
@@ -93,7 +94,7 @@ export function useResultadosRanking() {
     alertConfig,
     setAlertConfig,
     authMode,
-    balanceTotal,
+    balanceTotal: walletBalance?.total ?? 0,
     openLogin,
     isLoading,
   };

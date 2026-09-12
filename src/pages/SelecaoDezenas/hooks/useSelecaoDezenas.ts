@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useAppStore } from '../../../store/useAppStore';
 import { useBolaoDetails, usePlaceBets } from '../../../hooks/useBets';
 import { useWalletBalance } from '../../../hooks/useWallet';
 import { SavedBetItem } from '../components/SavedGamesList';
@@ -10,7 +9,6 @@ import { SavedBetItem } from '../components/SavedGamesList';
 export function useSelecaoDezenas() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const { balanceTotal } = useAppStore();
   const { data: bolao, isLoading: isBolaoLoading } = useBolaoDetails();
   const { data: walletBalance } = useWalletBalance();
   const placeBetsMutation = usePlaceBets();
@@ -66,7 +64,7 @@ export function useSelecaoDezenas() {
   const allFinalGames: SavedBetItem[] = [...savedGames, ...(selectedNumbers.length === 6 ? [{ id: 'current-game', numbers: selectedNumbers }] : [])];
   const totalGamesCount = allFinalGames.length;
   const totalPrice = totalGamesCount * unitPrice;
-  const effectiveBalance = walletBalance?.total ?? balanceTotal;
+  const effectiveBalance = walletBalance?.total ?? 0;
 
   const handleConfirm = () => {
     if (totalGamesCount === 0) return;
@@ -83,7 +81,7 @@ export function useSelecaoDezenas() {
       return;
     }
     placeBetsMutation.mutate(
-      { bolaoId: bolao?.id || 'bolao-big-10', bolaoName: bolao?.nome || 'Sorteio BIG 10', numberSets: allFinalGames.map((g) => g.numbers), cotaPrice: unitPrice },
+      { bolaoId: bolao?.id || 'bolao-big-10', numberSets: allFinalGames.map((g) => g.numbers), cotaPrice: unitPrice },
       {
         onSuccess: () => {
           confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });

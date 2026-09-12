@@ -36,7 +36,7 @@ export default function Carteira() {
     handleDepositInput,
     addDepositQuick,
     generatePixPayment,
-    simulatePixWebhookSuccess,
+    createPaymentIntent,
     setWithdrawMax,
     processWithdraw,
     openTransactionReceipt,
@@ -89,7 +89,7 @@ export default function Carteira() {
         onClose={() => setIsPixSheetOpen(false)}
         depositAmount={depositAmount}
         pixTimer={pixTimer}
-        onSimulateWebhook={simulatePixWebhookSuccess}
+        onCreatePaymentIntent={createPaymentIntent}
       />
 
       <WithdrawModal

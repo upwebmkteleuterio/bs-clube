@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useAppStore } from '../../../store/useAppStore';
+import { useWalletBalance } from '../../../hooks/useWallet';
 import { useGames } from '../../../hooks/useGames';
 
 export type FilterCategory = 'todos' | 'meus' | 'cota10' | 'cota20' | 'cota50';
@@ -9,7 +10,8 @@ export type FilterCategory = 'todos' | 'meus' | 'cota10' | 'cota20' | 'cota50';
 export function useHomeLobby() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const { balanceTotal, subscribedGames } = useAppStore();
+  const { subscribedGames } = useAppStore();
+  const { data: walletBalance } = useWalletBalance();
   const { data: games = [], isLoading, isError, refetch } = useGames();
   const [filterState, setFilterState] = useState<FilterCategory>('todos');
 
@@ -35,7 +37,7 @@ export function useHomeLobby() {
     setFilterState,
     handlePlayAction,
     authMode: session ? 'auth' as const : 'guest' as const,
-    balanceTotal,
+    balanceTotal: walletBalance?.total ?? 0,
     subscribedGames,
     userNickname: session?.user.user_metadata?.name || session?.user.email?.split('@')[0] || 'Apostador',
     openLogin: () => navigate('/login'),

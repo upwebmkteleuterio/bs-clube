@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useAppStore } from '../store/useAppStore';
+import { useWalletBalance } from '../hooks/useWallet';
 
 function MoneyRainAnimation() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -70,7 +70,8 @@ export default function Lobby() {
   const [countSecs, setCountSecs] = useState(45);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { session } = useAuth();
-  const { balanceTotal } = useAppStore();
+  const { data: walletBalance } = useWalletBalance();
+  const balanceTotal = walletBalance?.total ?? 0;
 
   useEffect(() => {
     const timer = setInterval(() => {

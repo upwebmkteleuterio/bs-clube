@@ -5,7 +5,7 @@ interface PixPaymentSheetProps {
   onClose: () => void;
   depositAmount: string;
   pixTimer: number;
-  onSimulateWebhook: () => void;
+  onCreatePaymentIntent: () => void;
 }
 
 export default function PixPaymentSheet({
@@ -13,7 +13,7 @@ export default function PixPaymentSheet({
   onClose,
   depositAmount,
   pixTimer,
-  onSimulateWebhook,
+  onCreatePaymentIntent,
 }: PixPaymentSheetProps) {
   const [copied, setCopied] = useState(false);
 
@@ -95,19 +95,17 @@ export default function PixPaymentSheet({
             Aguardando confirmação de pagamento...
           </span>
           <span className="text-[10px] text-slate-500">
-            O saldo será liberado automaticamente.
+            O saldo só será liberado após a confirmação do provedor.
           </span>
         </div>
 
-        <div className="pt-2 text-center border-t border-slate-800 border-dashed">
-          <button
-            type="button"
-            onClick={onSimulateWebhook}
-            className="text-[10px] text-slate-500 hover:text-brand-pix underline font-medium cursor-pointer"
-          >
-            ⚡ Simular API Woovi: Confirmar Pagamento Instantâneo
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={onCreatePaymentIntent}
+          className="w-full rounded-xl bg-brand-pix py-3 text-sm font-bold text-slate-950 transition hover:brightness-110"
+        >
+          Registrar intenção de pagamento
+        </button>
       </div>
     </div>
   );

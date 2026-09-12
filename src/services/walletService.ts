@@ -1,173 +1,152 @@
+import { supabase } from '@/integrations/supabase/client';
 import { UserTransaction, WalletBalance } from '../types';
-import { initialWalletBalance, initialTransactions } from '../mocks/wallet';
-import { adminService } from './adminService';
 
-const BALANCE_STORAGE_KEY = 'bs_clube_wallet_balance';
-const TRANSACTIONS_STORAGE_KEY = 'bs_clube_transactions';
+type Row = Record<string, any>;
 
-function getStoredBalance(): WalletBalance {
-  try {
-    const data = localStorage.getItem(BALANCE_STORAGE_KEY);
-    if (data) {
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading wallet balance from localStorage:', error);
-  }
-  localStorage.setItem(BALANCE_STORAGE_KEY, JSON.stringify(initialWalletBalance));
-  return { ...initialWalletBalance };
+function mapBalance(row: Row | null): WalletBalance {
+  return {
+    total: Number(row?.total ?? 0),
+    withdrawable: Number(row?.withdrawable ?? 0),
+    bonus: Number(row?.bonus ?? 0),
+  };
 }
 
-function saveStoredBalance(balance: WalletBalance): void {
-  try {
-    localStorage.setItem(BALANCE_STORAGE_KEY, JSON.stringify(balance));
-  } catch (error) {
-    console.error('Error saving wallet balance to localStorage:', error);
-  }
+function mapLedgerEntry(row: Row): UserTransaction {
+  const entryType = String(row.entry_type ?? 'bet');
+  const isWithdrawal = entryType === 'withdraw' || entryType === 'withdrawal_reversal';
+  const type: UserTransaction['type'] = entryType === 'deposit' || entryType === 'prize' || isWithdrawal ? entryType === 'deposit' ? 'deposit' : entryType === 'prize' ? 'prize' : 'withdraw' : 'bet';
+  const amount = Number(row.amount ?? 0);
+  return {
+    id: String(row.id),
+    type,
+    title: row.metadata?.title ?? (entryType === 'withdrawal_reversal' ? 'Saque devolvido' : type === 'deposit' ? 'Depósito Pix' : type === 'withdraw' ? 'Saque Pix' : type === 'prize' ? 'Prêmio' : 'Aposta'),
+    date: row.created_at ?? '',
+    value: amount,
+    status: row.status ?? 'success',
+  };
 }
 
-function getStoredTransactions(): UserTransaction[] {
-  try {
-    const data = localStorage.getItem(TRANSACTIONS_STORAGE_KEY);
-    if (data) {
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading transactions from localStorage:', error);
-  }
-  localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(initialTransactions));
-  return [...initialTransactions];
+function mapPayment(row: Row): UserTransaction {
+  return {
+    id: String(row.id ?? row.external_id ?? crypto.randomUUID()),
+    type: row.kind === 'withdraw' ? 'withdraw' : 'deposit',
+    title: row.kind === 'withdraw' ? 'Saque Solicitado' : 'Depósito Pix',
+    date: row.created_at ?? new Date().toISOString(),
+    value: Number(row.amount ?? 0),
+    status: row.status ?? 'pending',
+  };
 }
 
-function saveStoredTransactions(transactions: UserTransaction[]): void {
-  try {
-    localStorage.setItem(TRANSACTIONS_STORAGE_KEY, JSON.stringify(transactions));
-  } catch (error) {
-    console.error('Error saving transactions to localStorage:', error);
-  }
+function mapWithdrawal(row: Row): UserTransaction {
+  return {
+    id: String(row.id),
+    type: 'withdraw',
+    title: 'Saque Solicitado',
+    date: row.created_at ?? new Date().toISOString(),
+    value: -Math.abs(Number(row.amount ?? 0)),
+    status: row.status ?? 'pending',
+    pixKeyType: row.pix_key_type,
+    pixKey: row.pix_key,
+  };
+}
+
+async function currentUser() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  if (!data.user) throw new Error('É necessário estar autenticado.');
+  return data.user;
+}
+
+function rpcRow(data: unknown): Row {
+  if (Array.isArray(data)) return (data[0] as Row) ?? {};
+  return (data as Row) ?? {};
 }
 
 export const walletService = {
   async getBalance(): Promise<WalletBalance> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(getStoredBalance());
-      }, 500);
-    });
-  },
-
-  async updateBalance(newBalance: Partial<WalletBalance>): Promise<WalletBalance> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const current = getStoredBalance();
-        const updated = { ...current, ...newBalance };
-        saveStoredBalance(updated);
-        resolve(updated);
-      }, 500);
-    });
+    const user = await currentUser();
+    const { data, error } = await supabase.from('wallet_accounts').select('total, withdrawable, bonus').eq('user_id', user.id).maybeSingle();
+    if (error) throw error;
+    return mapBalance(data);
   },
 
   async getAll(): Promise<UserTransaction[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(getStoredTransactions());
-      }, 500);
-    });
+    const user = await currentUser();
+    const { data: ledger, error: ledgerError } = await supabase
+      .from('wallet_ledger')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (ledgerError) throw ledgerError;
+
+    const { data: payments, error: paymentsError } = await supabase
+      .from('payments')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (paymentsError) throw paymentsError;
+    const { data: withdrawals, error: withdrawalsError } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (withdrawalsError) throw withdrawalsError;
+
+    const ledgerTransactions = (ledger ?? [])
+      .filter((row: Row) => !['withdraw', 'withdrawal_reversal'].includes(String(row.entry_type)))
+      .map(mapLedgerEntry);
+    const pendingPayments = (payments ?? [])
+      .filter((row: Row) => row.status !== 'confirmed')
+      .map(mapPayment);
+    return [...ledgerTransactions, ...pendingPayments, ...(withdrawals ?? []).map(mapWithdrawal)]
+      .sort((a, b) => b.date.localeCompare(a.date));
   },
 
   async getById(id: string): Promise<UserTransaction | null> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const txs = getStoredTransactions();
-        const found = txs.find((t) => t.id === id) || null;
-        resolve(found);
-      }, 500);
-    });
+    const user = await currentUser();
+    const { data: ledger, error: ledgerError } = await supabase.from('wallet_ledger').select('*').eq('id', id).eq('user_id', user.id).maybeSingle();
+    if (ledgerError) throw ledgerError;
+    if (ledger) return mapLedgerEntry(ledger);
+    const { data: payment, error: paymentError } = await supabase.from('payments').select('*').eq('id', id).eq('user_id', user.id).maybeSingle();
+    if (paymentError) throw paymentError;
+    if (payment) return mapPayment(payment);
+    const { data: withdrawal, error: withdrawalError } = await supabase.from('withdrawals').select('*').eq('id', id).eq('user_id', user.id).maybeSingle();
+    if (withdrawalError) throw withdrawalError;
+    return withdrawal ? mapWithdrawal(withdrawal) : null;
   },
 
   async createDeposit(amount: number): Promise<{ balance: WalletBalance; transaction: UserTransaction }> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const currentBalance = getStoredBalance();
-        const newBalance: WalletBalance = {
-          ...currentBalance,
-          total: currentBalance.total + amount,
-          withdrawable: currentBalance.withdrawable + amount,
-        };
-        saveStoredBalance(newBalance);
-
-        const newTx: UserTransaction = {
-          id: `TRX-PIX${Math.floor(1000 + Math.random() * 9000)}`,
-          type: 'deposit',
-          title: 'Depósito Pix',
-          date: 'Agora mesmo',
-          value: amount,
-          status: 'success',
-        };
-
-        const txs = getStoredTransactions();
-        saveStoredTransactions([newTx, ...txs]);
-
-        resolve({ balance: newBalance, transaction: newTx });
-      }, 500);
+    await currentUser();
+    if (!Number.isFinite(amount) || amount <= 0) throw new Error('Informe um valor de depósito válido.');
+    const { data, error } = await supabase.rpc('create_payment_intent', {
+      p_amount: amount,
+      p_kind: 'deposit',
     });
+    if (error) throw error;
+    const transaction = mapPayment(rpcRow(data));
+    return { balance: await this.getBalance(), transaction: { ...transaction, status: 'pending' } };
   },
 
-  async createWithdrawal(
-    amount: number,
-    pixKeyType: string,
-    pixKey: string
-  ): Promise<{ balance: WalletBalance; transaction: UserTransaction }> {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const currentBalance = getStoredBalance();
-        if (amount > currentBalance.withdrawable) {
-          reject(new Error('Saldo sacável insuficiente'));
-          return;
-        }
-
-        const newBalance: WalletBalance = {
-          ...currentBalance,
-          total: currentBalance.total - amount,
-          withdrawable: currentBalance.withdrawable - amount,
-        };
-        saveStoredBalance(newBalance);
-
-        const newTx: UserTransaction = {
-          id: `TRX-WD${Math.floor(1000 + Math.random() * 9000)}`,
-          type: 'withdraw',
-          title: 'Saque Solicitado',
-          date: 'Agora mesmo',
-          value: -amount,
-          status: 'success',
-          pixKeyType,
-          pixKey,
-        };
-
-        const txs = getStoredTransactions();
-        saveStoredTransactions([newTx, ...txs]);
-
-        // Sync withdrawal request to admin panel
-        adminService.addWithdrawalRequest({
-          user: 'Você (Apostador Atual)',
-          amount,
-          pixKey,
-          pixType: pixKeyType,
-        }).catch((err) => console.error('Error syncing to admin:', err));
-
-        resolve({ balance: newBalance, transaction: newTx });
-      }, 500);
+  async createWithdrawal(amount: number, pixKeyType: string, pixKey: string): Promise<{ balance: WalletBalance; transaction: UserTransaction }> {
+    await currentUser();
+    if (!Number.isFinite(amount) || amount <= 0 || !pixKey.trim()) throw new Error('Confira o valor e a chave Pix.');
+    const { data, error } = await supabase.rpc('request_withdrawal', {
+      p_amount: amount,
+      p_pix_key_type: pixKeyType,
+      p_pix_key: pixKey.trim(),
     });
-  },
-
-  async delete(id: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const txs = getStoredTransactions();
-        const filtered = txs.filter((t) => t.id !== id);
-        saveStoredTransactions(filtered);
-        resolve(true);
-      }, 500);
-    });
+    if (error) throw error;
+    const row = rpcRow(data);
+    const transaction: UserTransaction = {
+      id: String(row.id),
+      type: 'withdraw',
+      title: 'Saque Solicitado',
+      date: row.created_at ?? new Date().toISOString(),
+      value: -Math.abs(Number(row.amount ?? amount)),
+      status: row.status ?? 'pending',
+      pixKeyType,
+      pixKey,
+    };
+    return { balance: await this.getBalance(), transaction };
   },
 };

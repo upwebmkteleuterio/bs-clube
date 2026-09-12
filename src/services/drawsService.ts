@@ -1,98 +1,77 @@
+import { supabase } from '@/integrations/supabase/client';
 import { OfficialDraw } from '../types';
-import { mockDraws } from '../mocks/draws';
 
-const STORAGE_KEY = 'bs_clube_draws';
+type DrawRow = Record<string, any>;
 
-function getStoredDraws(): OfficialDraw[] {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (data) {
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading draws from localStorage:', error);
-  }
-  // Initialize with mocks if not present
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(mockDraws));
-  return [...mockDraws];
-}
-
-function saveStoredDraws(draws: OfficialDraw[]): void {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(draws));
-  } catch (error) {
-    console.error('Error saving draws to localStorage:', error);
-  }
+function mapDraw(row: DrawRow): OfficialDraw {
+  return {
+    id: String(row.id),
+    concurso: row.contest ?? '',
+    data: row.draw_date ?? '',
+    local: row.location ?? '',
+    dezenas: Array.isArray(row.numbers) ? row.numbers.map(Number) : [],
+  };
 }
 
 export const drawsService = {
   async getAll(): Promise<OfficialDraw[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(getStoredDraws());
-      }, 500);
-    });
+    const { data, error } = await supabase
+      .from('draws')
+      .select('*')
+      .eq('is_published', true)
+      .order('draw_date', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(mapDraw);
   },
 
   async getById(id: string): Promise<OfficialDraw | null> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const draws = getStoredDraws();
-        const found = draws.find((d) => d.id === id) || null;
-        resolve(found);
-      }, 500);
-    });
+    const { data, error } = await supabase.from('draws').select('*').eq('id', id).eq('is_published', true).maybeSingle();
+    if (error) throw error;
+    return data ? mapDraw(data) : null;
   },
 
   async getLatest(): Promise<OfficialDraw | null> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const draws = getStoredDraws();
-        resolve(draws.length > 0 ? draws[0] : null);
-      }, 500);
-    });
+    const { data, error } = await supabase
+      .from('draws')
+      .select('*')
+      .eq('is_published', true)
+      .order('draw_date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? mapDraw(data) : null;
   },
 
   async create(drawData: Omit<OfficialDraw, 'id'>): Promise<OfficialDraw> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const draws = getStoredDraws();
-        const newDraw: OfficialDraw = {
-          ...drawData,
-          id: `draw-${Date.now()}`,
-        };
-        const updated = [newDraw, ...draws];
-        saveStoredDraws(updated);
-        resolve(newDraw);
-      }, 500);
-    });
+    const { data, error } = await supabase
+      .from('draws')
+      .insert({
+        contest: drawData.concurso,
+        draw_date: drawData.data,
+        location: drawData.local,
+        numbers: drawData.dezenas,
+        is_published: true,
+      })
+      .select('*')
+      .single();
+    if (error) throw error;
+    return mapDraw(data);
   },
 
   async update(id: string, updates: Partial<OfficialDraw>): Promise<OfficialDraw> {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        const draws = getStoredDraws();
-        const index = draws.findIndex((d) => d.id === id);
-        if (index === -1) {
-          reject(new Error(`Sorteio com ID ${id} não encontrado.`));
-          return;
-        }
-        const updatedDraw = { ...draws[index], ...updates };
-        draws[index] = updatedDraw;
-        saveStoredDraws(draws);
-        resolve(updatedDraw);
-      }, 500);
-    });
+    const patch: Record<string, unknown> = {};
+    if (updates.concurso !== undefined) patch.contest = updates.concurso;
+    if (updates.data !== undefined) patch.draw_date = updates.data;
+    if (updates.local !== undefined) patch.location = updates.local;
+    if (updates.dezenas !== undefined) patch.numbers = updates.dezenas;
+    const { data, error } = await supabase.from('draws').update(patch).eq('id', id).select('*').single();
+    if (error) throw error;
+    return mapDraw(data);
   },
 
   async delete(id: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const draws = getStoredDraws();
-        const filtered = draws.filter((d) => d.id !== id);
-        saveStoredDraws(filtered);
-        resolve(true);
-      }, 500);
-    });
+    const { error } = await supabase.from('draws').delete().eq('id', id);
+    if (error) throw error;
+    return true;
   },
 };

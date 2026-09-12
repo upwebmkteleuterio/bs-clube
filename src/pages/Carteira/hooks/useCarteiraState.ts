@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import confetti from 'canvas-confetti';
 import {
   useWalletBalance,
   useWalletTransactions,
@@ -59,10 +58,8 @@ export function useCarteiraState() {
     return () => clearInterval(pixIntervalRef.current);
   }, [pixTimer]);
 
-  const simulatePixWebhookSuccess = () => {
+  const createPaymentIntent = () => {
     clearInterval(pixIntervalRef.current);
-    confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
-
     const val = parseFloat(depositAmount);
     if (!isNaN(val) && val > 0) {
       depositMutation.mutate(val, {
@@ -137,7 +134,7 @@ export function useCarteiraState() {
     handleDepositInput,
     addDepositQuick,
     generatePixPayment,
-    simulatePixWebhookSuccess,
+    createPaymentIntent,
     setWithdrawMax,
     processWithdraw,
     openTransactionReceipt,

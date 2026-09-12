@@ -1,148 +1,91 @@
+import { supabase } from '@/integrations/supabase/client';
 import { BolaoDetails, UserBet } from '../types';
-import { initialBolaoDetails, initialUserBets } from '../mocks/bets';
 
-const BOLAO_STORAGE_KEY = 'bs_clube_bolao_details';
-const BETS_STORAGE_KEY = 'bs_clube_user_bets';
+type Row = Record<string, any>;
 
-function getStoredBolao(): BolaoDetails {
-  try {
-    const data = localStorage.getItem(BOLAO_STORAGE_KEY);
-    if (data) {
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading bolao details from localStorage:', error);
-  }
-  localStorage.setItem(BOLAO_STORAGE_KEY, JSON.stringify(initialBolaoDetails));
-  return { ...initialBolaoDetails };
+const firstRelation = (value: unknown): Row | undefined =>
+  Array.isArray(value) ? value[0] : (value as Row | undefined);
+
+function mapPool(row: Row): BolaoDetails {
+  const category = firstRelation(row.pool_categories);
+  const draw = firstRelation(row.draws);
+  const status = row.status as string;
+  return {
+    id: String(row.id),
+    nome: row.name ?? '',
+    lottery: category?.name ?? row.game_type ?? 'Mega-Sena',
+    concurso: draw?.contest ?? '',
+    concursoRef: draw?.contest ?? '',
+    mesaName: category?.name ?? row.name ?? '',
+    dataSorteio: draw?.draw_date ?? '',
+    horarioSorteio: '',
+    cotaPrice: Number(row.buy_in ?? 0),
+    vagasPreenchidas: Number(row.filled_slots ?? 0),
+    vagasTotal: Number(row.total_slots ?? 0),
+    estado: status === 'closed' || status === 'completed' ? 'Encerrada' : 'Aberta',
+    minNumbers: Number(row.min_numbers ?? 6),
+    maxNumbers: Number(row.max_numbers ?? 6),
+    totalLotteryNumbers: Number(row.total_lottery_numbers ?? 60),
+    descricao: row.description ?? '',
+  };
 }
 
-function saveStoredBolao(bolao: BolaoDetails): void {
-  try {
-    localStorage.setItem(BOLAO_STORAGE_KEY, JSON.stringify(bolao));
-  } catch (error) {
-    console.error('Error saving bolao details to localStorage:', error);
-  }
+function mapBet(row: Row): UserBet {
+  return {
+    id: String(row.id),
+    bolaoId: String(row.pool_id),
+    numbers: Array.isArray(row.numbers) ? row.numbers.map(Number) : [],
+    createdAt: row.created_at ?? '',
+    cotaPrice: Number(row.cota_price ?? 0),
+  };
 }
 
-function getStoredBets(): UserBet[] {
-  try {
-    const data = localStorage.getItem(BETS_STORAGE_KEY);
-    if (data) {
-      return JSON.parse(data);
-    }
-  } catch (error) {
-    console.error('Error reading user bets from localStorage:', error);
-  }
-  localStorage.setItem(BETS_STORAGE_KEY, JSON.stringify(initialUserBets));
-  return [...initialUserBets];
-}
+const poolSelect = '*, pool_categories(name, slug), draws(contest, draw_date, location, numbers)';
 
-function saveStoredBets(bets: UserBet[]): void {
-  try {
-    localStorage.setItem(BETS_STORAGE_KEY, JSON.stringify(bets));
-  } catch (error) {
-    console.error('Error saving user bets to localStorage:', error);
-  }
+async function currentUser() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error) throw error;
+  if (!data.user) throw new Error('É necessário estar autenticado.');
+  return data.user;
 }
 
 export const betsService = {
-  async getBolaoDetails(_id?: string): Promise<BolaoDetails> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(getStoredBolao());
-      }, 500);
-    });
-  },
-
-  async updateBolaoDetails(patch: Partial<BolaoDetails>): Promise<BolaoDetails> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const current = getStoredBolao();
-        const updated = { ...current, ...patch };
-        saveStoredBolao(updated);
-        resolve(updated);
-      }, 500);
-    });
+  async getBolaoDetails(id?: string): Promise<BolaoDetails> {
+    let query = supabase.from('pools').select(poolSelect).in('status', ['open', 'late_registration']);
+    if (id) query = query.eq('id', id);
+    const { data, error } = await query.order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (error) throw error;
+    if (!data) throw new Error('Nenhum bolão disponível no momento.');
+    return mapPool(data);
   },
 
   async getAll(): Promise<UserBet[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(getStoredBets());
-      }, 500);
-    });
+    const user = await currentUser();
+    const { data, error } = await supabase
+      .from('purchased_bets')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(mapBet);
   },
 
   async getById(id: string): Promise<UserBet | null> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const bets = getStoredBets();
-        const found = bets.find((b) => b.id === id) || null;
-        resolve(found);
-      }, 500);
-    });
+    const user = await currentUser();
+    const { data, error } = await supabase.from('purchased_bets').select('*').eq('id', id).eq('user_id', user.id).maybeSingle();
+    if (error) throw error;
+    return data ? mapBet(data) : null;
   },
 
-  async create(betData: Omit<UserBet, 'id' | 'createdAt'>): Promise<UserBet> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const bets = getStoredBets();
-        const newBet: UserBet = {
-          ...betData,
-          id: `bet-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-          createdAt: 'Agora mesmo',
-        };
-        const updated = [newBet, ...bets];
-        saveStoredBets(updated);
-
-        // Update bolão vagas
-        const bolao = getStoredBolao();
-        saveStoredBolao({
-          ...bolao,
-          vagasPreenchidas: Math.min(bolao.vagasTotal, bolao.vagasPreenchidas + 1),
-        });
-
-        resolve(newBet);
-      }, 500);
+  async placeBets(poolId: string, numberSets: number[][], cotaPrice: number): Promise<UserBet[]> {
+    await currentUser();
+    const { data, error } = await supabase.rpc('place_bets', {
+      p_pool_id: poolId,
+      p_number_sets: numberSets,
+      p_cota_price: cotaPrice,
     });
-  },
-
-  async createBulk(bolaoId: string, numberSets: number[][], cotaPrice: number): Promise<UserBet[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const bets = getStoredBets();
-        const newBets: UserBet[] = numberSets.map((numbers, idx) => ({
-          id: `bet-${Date.now()}-${idx}-${Math.random().toString(36).substr(2, 4)}`,
-          bolaoId,
-          numbers: [...numbers].sort((a, b) => a - b),
-          createdAt: 'Agora mesmo',
-          cotaPrice,
-        }));
-
-        const updated = [...newBets, ...bets];
-        saveStoredBets(updated);
-
-        // Update bolão vagas
-        const bolao = getStoredBolao();
-        saveStoredBolao({
-          ...bolao,
-          vagasPreenchidas: Math.min(bolao.vagasTotal, bolao.vagasPreenchidas + numberSets.length),
-        });
-
-        resolve(newBets);
-      }, 500);
-    });
-  },
-
-  async delete(id: string): Promise<boolean> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const bets = getStoredBets();
-        const filtered = bets.filter((b) => b.id !== id);
-        saveStoredBets(filtered);
-        resolve(true);
-      }, 500);
-    });
+    if (error) throw error;
+    const rows = Array.isArray(data) ? data : data?.purchased_bets ?? data?.bets ?? (data ? [data] : []);
+    return rows.map(mapBet);
   },
 };

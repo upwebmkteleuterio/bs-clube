@@ -9,7 +9,7 @@ interface UsersManagementTableProps {
   onSearchChange: (term: string) => void;
   statusFilter: 'all' | 'active' | 'blocked';
   onStatusFilterChange: (status: 'all' | 'active' | 'blocked') => void;
-  onToggleUserStatus: (id: number) => void;
+  onToggleUserStatus: (id: number | string) => void;
 }
 
 export default function UsersManagementTable({

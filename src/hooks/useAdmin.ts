@@ -55,7 +55,7 @@ export function useAdminUsers() {
 export function useToggleUserStatus() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: number) => adminService.toggleUserStatus(id),
+    mutationFn: (id: number | string) => adminService.toggleUserStatus(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_USERS_KEY });
     },
@@ -81,6 +81,8 @@ export function useCreateCategory() {
     }) => adminService.createCategory(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_CATEGORIES_KEY });
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.invalidateQueries({ queryKey: ['draws'] });
     },
   });
 }

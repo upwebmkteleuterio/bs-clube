@@ -102,7 +102,7 @@ export interface AdminWithdrawal {
 }
 
 export interface AdminUser {
-  id: number;
+  id: number | string;
   name: string;
   phone: string;
   balance: number;

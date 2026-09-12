@@ -1,11 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useAppStore } from '../store/useAppStore';
+import { useWalletBalance, useWalletTransactions } from '../hooks/useWallet';
 
 export default function Perfil() {
   const navigate = useNavigate();
   const { user, role, signOut } = useAuth();
-  const { balanceTotal, balanceWithdrawable, transactions } = useAppStore();
+  const { data: balance } = useWalletBalance();
+  const { data: transactions = [] } = useWalletTransactions();
+  const balanceTotal = balance?.total ?? 0;
+  const balanceWithdrawable = balance?.withdrawable ?? 0;
   const displayName = user?.user_metadata?.name || user?.email?.split('@')[0] || 'Apostador';
 
   const handleSignOut = async () => {
