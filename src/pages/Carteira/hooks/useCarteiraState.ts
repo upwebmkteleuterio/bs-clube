@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
-import { useAppStore } from '../../../store/useAppStore';
 import {
   useWalletBalance,
   useWalletTransactions,
@@ -10,8 +9,6 @@ import {
 import { UserTransaction } from '../../../types';
 
 export function useCarteiraState() {
-  const { authMode, setAuthMode } = useAppStore();
-
   const { data: balance, isLoading: isBalanceLoading } = useWalletBalance();
   const { data: transactions = [], isLoading: isTransactionsLoading } = useWalletTransactions();
   const depositMutation = useDeposit();
@@ -32,9 +29,6 @@ export function useCarteiraState() {
   const [pixTimer, setPixTimer] = useState(15 * 60);
   const pixIntervalRef = useRef<any>(null);
 
-  const simulateLogin = () => {
-    setAuthMode('auth');
-  };
 
   const handleDepositInput = (val: string) => {
     setDepositAmount(val);
@@ -116,9 +110,6 @@ export function useCarteiraState() {
   };
 
   return {
-    authMode,
-    setAuthMode,
-    simulateLogin,
     balance,
     isBalanceLoading,
     transactions,

@@ -7,12 +7,8 @@ import DepositModal from './Carteira/components/DepositModal';
 import PixPaymentSheet from './Carteira/components/PixPaymentSheet';
 import WithdrawModal from './Carteira/components/WithdrawModal';
 import ReceiptSheet from './Carteira/components/ReceiptSheet';
-import GuestRestrictedCard from './Carteira/components/GuestRestrictedCard';
-
 export default function Carteira() {
   const {
-    authMode,
-    simulateLogin,
     balance,
     isBalanceLoading,
     transactions,
@@ -53,33 +49,29 @@ export default function Carteira() {
       <CarteiraHeader />
 
       <main className="max-w-4xl w-full mx-auto px-4 pt-6 space-y-6">
-        {authMode === 'guest' ? (
-          <GuestRestrictedCard onSimulateLogin={simulateLogin} />
-        ) : (
-          <div className="space-y-6">
-            <BalanceCard
-              balance={balance}
-              isLoading={isBalanceLoading}
-              isBalanceVisible={isBalanceVisible}
-              onToggleBalanceVisibility={() => setIsBalanceVisible(!isBalanceVisible)}
-              onOpenDeposit={() => {
-                setDepositAmount('');
-                setIsDepositModalOpen(true);
-              }}
-              onOpenWithdraw={() => {
-                setWithdrawAmount('');
-                setWithdrawKey('');
-                setIsWithdrawModalOpen(true);
-              }}
-            />
+        <div className="space-y-6">
+          <BalanceCard
+            balance={balance}
+            isLoading={isBalanceLoading}
+            isBalanceVisible={isBalanceVisible}
+            onToggleBalanceVisibility={() => setIsBalanceVisible(!isBalanceVisible)}
+            onOpenDeposit={() => {
+              setDepositAmount('');
+              setIsDepositModalOpen(true);
+            }}
+            onOpenWithdraw={() => {
+              setWithdrawAmount('');
+              setWithdrawKey('');
+              setIsWithdrawModalOpen(true);
+            }}
+          />
 
-            <TransactionHistory
-              transactions={transactions}
-              isLoading={isTransactionsLoading}
-              onSelectTransaction={openTransactionReceipt}
-            />
-          </div>
-        )}
+          <TransactionHistory
+            transactions={transactions}
+            isLoading={isTransactionsLoading}
+            onSelectTransaction={openTransactionReceipt}
+          />
+        </div>
       </main>
 
       {/* Modals & Bottom Sheets */}

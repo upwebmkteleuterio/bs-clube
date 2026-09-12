@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useAppStore } from '../../../store/useAppStore';
 import { useDraws } from '../../../hooks/useDraws';
 import { useGames } from '../../../hooks/useGames';
@@ -6,7 +8,10 @@ import { useRankings } from '../../../hooks/useRankings';
 import { OfficialDraw, Game } from '../../../types';
 
 export function useResultadosRanking() {
-  const { authMode, setAuthMode, balanceTotal } = useAppStore();
+  const navigate = useNavigate();
+  const { session } = useAuth();
+  const { balanceTotal } = useAppStore();
+  const authMode = session ? 'auth' as const : 'guest' as const;
 
   const { data: draws = [], isLoading: isLoadingDraws } = useDraws();
   const { data: games = [], isLoading: isLoadingGames } = useGames();
@@ -63,9 +68,9 @@ export function useResultadosRanking() {
     return games.find((g) => g.id === selectedGameId) || null;
   }, [games, selectedGameId]);
 
-  const simulateLogin = () => {
-    setAuthMode('auth');
+  const openLogin = () => {
     setIsGuestModalOpen(false);
+    navigate('/login', { state: { from: '/resultados' } });
   };
 
   const isLoading = isLoadingDraws || isLoadingGames || isLoadingParticipants;
@@ -88,9 +93,8 @@ export function useResultadosRanking() {
     alertConfig,
     setAlertConfig,
     authMode,
-    setAuthMode,
     balanceTotal,
-    simulateLogin,
+    openLogin,
     isLoading,
   };
 }

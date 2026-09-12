@@ -25,9 +25,8 @@ export default function Resultados() {
     alertConfig,
     setAlertConfig,
     authMode,
-    setAuthMode,
     balanceTotal,
-    simulateLogin,
+    openLogin,
     isLoading,
   } = useResultadosRanking();
 
@@ -98,7 +97,7 @@ export default function Resultados() {
       <GuestModal
         isOpen={isGuestModalOpen}
         onClose={() => setIsGuestModalOpen(false)}
-        onSimulateLogin={simulateLogin}
+        onOpenLogin={openLogin}
       />
 
       {/* Modal de Alerta / Informações */}

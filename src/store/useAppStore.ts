@@ -1,8 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-type AuthMode = 'guest' | 'auth';
-
 export interface GameLobbyItem {
   id: string;
   nome: string;
@@ -25,9 +23,6 @@ interface Transaction {
 }
 
 interface AppState {
-  authMode: AuthMode;
-  setAuthMode: (mode: AuthMode) => void;
-  
   balanceTotal: number;
   balanceWithdrawable: number;
   balanceBonus: number;
@@ -45,9 +40,6 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      authMode: 'guest',
-      setAuthMode: (mode) => set({ authMode: mode }),
-      
       balanceTotal: 50.00,
       balanceWithdrawable: 40.00,
       balanceBonus: 10.00,

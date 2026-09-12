@@ -5,22 +5,19 @@ import BolaoInfoCard from './SelecaoDezenas/components/BolaoInfoCard';
 import NumberGrid from './SelecaoDezenas/components/NumberGrid';
 import SavedGamesList from './SelecaoDezenas/components/SavedGamesList';
 import BottomConfirmationBar from './SelecaoDezenas/components/BottomConfirmationBar';
-import GuestRegisterModal from './SelecaoDezenas/components/GuestRegisterModal';
 import PaymentModal from './SelecaoDezenas/components/PaymentModal';
 
 export default function SelecaoDezenas() {
   const {
     bolao,
     isBolaoLoading,
-    authMode,
+    isLoggedIn,
     balanceTotal,
     selectedNumbers,
     savedGames,
     allFinalGames,
     totalGamesCount,
     totalPrice,
-    isGuestModalOpen,
-    setIsGuestModalOpen,
     isPaymentSheetOpen,
     setIsPaymentSheetOpen,
     toastMessage,
@@ -33,7 +30,6 @@ export default function SelecaoDezenas() {
     handleRemoveGame,
     handleClearAllGames,
     handleConfirm,
-    handleGuestRegisterSuccess,
     processBalancePayment,
     handlePayWithPix,
     isProcessingPayment,
@@ -54,7 +50,7 @@ export default function SelecaoDezenas() {
         lotteryTitle={bolao?.lottery || 'MEGA-SENA'}
         concursoRef={bolao?.concursoRef || 'Concurso #2780 • Caixa'}
         balanceTotal={balanceTotal}
-        isLoggedIn={authMode === 'auth'}
+        isLoggedIn={isLoggedIn}
         onOpenNotifications={() =>
           setToastMessage('Você está participando dos melhores bolões da Mega-Sena.')
         }
@@ -94,14 +90,6 @@ export default function SelecaoDezenas() {
         onConfirm={handleConfirm}
       />
 
-      {/* Modal Criar Conta para Visitante */}
-      <GuestRegisterModal
-        isOpen={isGuestModalOpen}
-        onClose={() => setIsGuestModalOpen(false)}
-        totalGamesCount={totalGamesCount}
-        totalPrice={totalPrice}
-        onRegisterSuccess={handleGuestRegisterSuccess}
-      />
 
       {/* Sheet / Modal de Pagamento de Cotas */}
       <PaymentModal

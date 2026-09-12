@@ -3,13 +3,13 @@ import React from 'react';
 interface GuestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSimulateLogin: () => void;
+  onOpenLogin: () => void;
 }
 
 export default function GuestModal({
   isOpen,
   onClose,
-  onSimulateLogin,
+  onOpenLogin,
 }: GuestModalProps) {
   if (!isOpen) return null;
 
@@ -33,10 +33,10 @@ export default function GuestModal({
         </p>
         <button
           type="button"
-          onClick={onSimulateLogin}
+          onClick={onOpenLogin}
           className="w-full bg-gradient-to-r from-emerald-500 to-brand-accent text-slate-950 font-black py-3.5 rounded-xl text-sm mt-2 cursor-pointer hover:opacity-95 transition"
         >
-          SIMULAR LOGIN / CADASTRO
+          ENTRAR OU CRIAR CONTA
         </button>
       </div>
     </div>

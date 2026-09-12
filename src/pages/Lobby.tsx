@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import { useAppStore } from '../store/useAppStore';
 
 function MoneyRainAnimation() {
@@ -68,8 +69,8 @@ export default function Lobby() {
   const navigate = useNavigate();
   const [countSecs, setCountSecs] = useState(45);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const { authMode, setAuthMode, balanceTotal } = useAppStore();
+  const { session } = useAuth();
+  const { balanceTotal } = useAppStore();
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -82,21 +83,8 @@ export default function Lobby() {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const openModal = () => setIsLoginModalOpen(true);
-  const closeModal = () => setIsLoginModalOpen(false);
-
-  const handleDirectLogin = () => {
-    setAuthMode('auth');
-    navigate('/home');
-  };
-
-  const simulateAuth = () => {
-    setAuthMode('auth');
-    closeModal();
-    setTimeout(() => {
-      alert("Simulação de Login bem-sucedida! Na jornada real, a UI do Header e Bottom Nav seria atualizada para o estado 'Logado'.");
-    }, 350);
-  };
+  const handleDirectLogin = () => navigate('/login');
+  const handleSignup = () => navigate('/cadastro');
 
   return (
     <div className="min-h-screen flex flex-col bg-[#070b14]" style={{ backgroundImage: 'radial-gradient(ellipse 100% 70% at 50% 0%, rgba(16, 185, 129, 0.30) 0%, #070b14 100%)', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed' }}>
@@ -123,13 +111,13 @@ export default function Lobby() {
           </div>
 
           <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-            {authMode === 'guest' ? (
+            {!session ? (
               <>
                 <button onClick={handleDirectLogin} className="flex text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition items-center space-x-1 sm:space-x-2">
                   <i className="fa-solid fa-arrow-right-to-bracket text-slate-400 hidden sm:inline"></i>
                   <span>Entrar</span>
                 </button>
-                <button onClick={openModal} className="bg-gradient-to-r from-emerald-500 to-brand-accent hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black py-2 px-3 sm:py-2.5 sm:px-5 rounded-lg sm:rounded-xl text-[10px] sm:text-sm shadow-lg shadow-emerald-950/50 transition-all transform hover:-translate-y-0.5 flex items-center space-x-1.5 sm:space-x-2">
+                <button onClick={handleSignup} className="bg-gradient-to-r from-emerald-500 to-brand-accent hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black py-2 px-3 sm:py-2.5 sm:px-5 rounded-lg sm:rounded-xl text-[10px] sm:text-sm shadow-lg shadow-emerald-950/50 transition-all transform hover:-translate-y-0.5 flex items-center space-x-1.5 sm:space-x-2">
                   <i className="fa-solid fa-user-plus hidden sm:inline"></i>
                   <span>Criar Conta</span>
                 </button>
@@ -700,32 +688,6 @@ export default function Lobby() {
       </footer>
 
       {/* Navigation handled by BottomNav component */}
-
-      {isLoginModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="glass-card w-full max-w-sm rounded-3xl border border-emerald-500/30 p-8 space-y-6 relative shadow-2xl text-center transform transition-all duration-300">
-            <button onClick={closeModal} className="absolute top-4 right-4 text-slate-400 hover:text-white w-8 h-8 rounded-full bg-slate-900 flex items-center justify-center transition">
-              <i className="fa-solid fa-xmark"></i>
-            </button>
-            
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white flex items-center justify-center font-bold text-2xl mx-auto shadow-lg shadow-emerald-900/40">
-              <i className="fa-solid fa-user-lock"></i>
-            </div>
-            
-            <div>
-              <h3 className="font-heading text-2xl font-black text-white">Acesso Rápido</h3>
-              <p className="text-xs text-slate-400 mt-2">Simulação: Em produção, aqui ficaria o formulário de login ou cadastro (guest first). Para testar o fluxo de apostas, clique no botão abaixo.</p>
-            </div>
-            
-            <button onClick={simulateAuth} className="w-full bg-gradient-to-r from-emerald-500 to-brand-accent hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black py-4 rounded-xl text-sm shadow-lg shadow-emerald-950/40 transition">
-              SIMULAR LOGIN E ENTRAR
-            </button>
-            <button onClick={closeModal} className="text-xs text-slate-500 hover:text-white transition underline">
-              Continuar como visitante
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
