@@ -20,7 +20,6 @@ export function useResultadosRanking() {
   const [selectedDrawId, setSelectedDrawId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [isGuestModalOpen, setIsGuestModalOpen] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{ title: string; msg: string } | null>(null);
 
   // Active draw defaults to the latest draw if not set
   const activeDraw: OfficialDraw | null = useMemo(() => {
@@ -80,8 +79,6 @@ export function useResultadosRanking() {
     setSearchTerm,
     isGuestModalOpen,
     setIsGuestModalOpen,
-    alertConfig,
-    setAlertConfig,
     authMode,
     balanceTotal: walletBalance?.total ?? 0,
     openLogin,

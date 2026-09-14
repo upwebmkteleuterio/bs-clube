@@ -16,7 +16,7 @@ export default function ResultadosBottomBar({
 
   return (
     <div className="fixed bottom-[68px] left-0 right-0 z-30 bg-slate-950/95 backdrop-blur-lg border-t border-slate-800 px-4 py-3 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-      <div className="max-w-4xl mx-auto flex justify-between items-center">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
         {authMode === 'guest' ? (
           <div className="w-full flex items-center justify-between">
             <div className="flex items-center space-x-3">

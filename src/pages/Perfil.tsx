@@ -75,7 +75,7 @@ export default function Perfil() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 pt-6 pb-32 space-y-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-32 space-y-6">
       <div className="flex items-center justify-between border-b border-slate-800 pb-4">
         <div>
           <h2 className="font-heading text-2xl font-black text-white flex items-center gap-2">

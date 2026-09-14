@@ -1,6 +1,5 @@
 import React from 'react';
 import { useSelecaoDezenas } from './SelecaoDezenas/hooks/useSelecaoDezenas';
-import SelecaoHeader from './SelecaoDezenas/components/SelecaoHeader';
 import BolaoInfoCard from './SelecaoDezenas/components/BolaoInfoCard';
 import NumberGrid from './SelecaoDezenas/components/NumberGrid';
 import SavedGamesList from './SelecaoDezenas/components/SavedGamesList';
@@ -11,7 +10,6 @@ export default function SelecaoDezenas() {
   const {
     bolao,
     isBolaoLoading,
-    isLoggedIn,
     balanceTotal,
     selectedNumbers,
     savedGames,
@@ -45,18 +43,7 @@ export default function SelecaoDezenas() {
         </div>
       )}
 
-      {/* Header limpo sem barra de protótipo */}
-      <SelecaoHeader
-        lotteryTitle={bolao?.lottery || 'MEGA-SENA'}
-        concursoRef={bolao?.concursoRef || 'Concurso #2780 • Caixa'}
-        balanceTotal={balanceTotal}
-        isLoggedIn={isLoggedIn}
-        onOpenNotifications={() =>
-          setToastMessage('Você está participando dos melhores bolões da Mega-Sena.')
-        }
-      />
-
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 pt-4 sm:pt-6 pb-52 space-y-6">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-52 space-y-6">
         {/* Card Informações do Bolão (Dinâmico a partir do Mock/Banco de Dados) */}
         <BolaoInfoCard bolao={bolao} isLoading={isBolaoLoading} />
 

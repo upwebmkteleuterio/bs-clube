@@ -1,6 +1,5 @@
 import React from 'react';
 import { useCarteiraState } from './Carteira/hooks/useCarteiraState';
-import CarteiraHeader from './Carteira/components/CarteiraHeader';
 import BalanceCard from './Carteira/components/BalanceCard';
 import TransactionHistory from './Carteira/components/TransactionHistory';
 import DepositModal from './Carteira/components/DepositModal';
@@ -49,10 +48,7 @@ export default function Carteira() {
 
   return (
     <div className="min-h-screen flex flex-col pb-28">
-      {/* Clean Header without prototype/visitor mode bar */}
-      <CarteiraHeader />
-
-      <main className="max-w-4xl w-full mx-auto px-4 pt-6 space-y-6">
+      <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
         <div className="space-y-6">
           <BalanceCard
             balance={balance}

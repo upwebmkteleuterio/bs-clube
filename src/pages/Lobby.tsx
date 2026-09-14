@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useWalletBalance } from '../hooks/useWallet';
+import AppHeader from '../components/AppHeader';
 
 function MoneyRainAnimation() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -69,9 +68,6 @@ export default function Lobby() {
   const navigate = useNavigate();
   const [countSecs, setCountSecs] = useState(45);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const { session } = useAuth();
-  const { data: walletBalance } = useWalletBalance();
-  const balanceTotal = walletBalance?.total ?? 0;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -84,60 +80,9 @@ export default function Lobby() {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const handleDirectLogin = () => navigate('/login');
-  const handleSignup = () => navigate('/cadastro');
-
   return (
     <div className="min-h-screen flex flex-col bg-[#070b14]" style={{ backgroundImage: 'radial-gradient(ellipse 100% 70% at 50% 0%, rgba(16, 185, 129, 0.30) 0%, #070b14 100%)', backgroundRepeat: 'no-repeat', backgroundAttachment: 'fixed' }}>
-      <header className="w-full glass-header sticky top-0 z-50 transition-all duration-300">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2">
-          <div className="flex items-center space-x-2 flex-shrink min-w-0">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold shadow-lg shadow-emerald-900/50 text-lg sm:text-xl">
-              <i className="fa-solid fa-clover"></i>
-            </div>
-            <div className="flex flex-col min-w-0 truncate">
-              <h1 className="font-heading font-black text-lg sm:text-2xl text-white leading-none tracking-tight flex items-center flex-wrap sm:flex-nowrap gap-1 sm:gap-0">
-                <span className="truncate">BS CLUBE</span>
-                <span className="text-[8px] sm:text-[10px] text-emerald-400 font-bold uppercase tracking-widest bg-emerald-500/10 px-1 sm:px-1.5 py-0.5 rounded border border-emerald-500/20 sm:ml-1 whitespace-nowrap">Mega-Sena</span>
-              </h1>
-              <span className="text-[9px] sm:text-[11px] text-slate-400 font-medium truncate hidden sm:block">Bolões da Mega-Sena no Pix</span>
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center bg-slate-900/80 border border-slate-800 rounded-full px-4 py-1.5 space-x-2 flex-shrink-0">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse"></div>
-            <span className="text-xs text-slate-300 font-medium">Prêmio Garantido</span>
-            <span className="text-slate-600 text-xs">•</span>
-            <span className="text-xs text-slate-400">Apurado via Caixa Econômica</span>
-          </div>
-
-          <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
-            {!session ? (
-              <>
-                <button onClick={handleDirectLogin} className="flex text-xs sm:text-sm font-semibold text-slate-300 hover:text-white transition items-center space-x-1 sm:space-x-2">
-                  <i className="fa-solid fa-arrow-right-to-bracket text-slate-400 hidden sm:inline"></i>
-                  <span>Entrar</span>
-                </button>
-                <button onClick={handleSignup} className="bg-gradient-to-r from-emerald-500 to-brand-accent hover:from-emerald-400 hover:to-emerald-500 text-slate-950 font-black py-2 px-3 sm:py-2.5 sm:px-5 rounded-lg sm:rounded-xl text-[10px] sm:text-sm shadow-lg shadow-emerald-950/50 transition-all transform hover:-translate-y-0.5 flex items-center space-x-1.5 sm:space-x-2">
-                  <i className="fa-solid fa-user-plus hidden sm:inline"></i>
-                  <span>Criar Conta</span>
-                </button>
-              </>
-            ) : (
-              <div className="flex items-center space-x-2 sm:space-x-3">
-                 <button onClick={() => navigate('/carteira')} className="bg-slate-900 border border-slate-800 px-2.5 py-1.5 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold text-slate-300 flex items-center space-x-1 sm:space-x-2 hover:bg-slate-800 transition">
-                    <i className="fa-solid fa-wallet text-emerald-400"></i>
-                    <span className="whitespace-nowrap">R$ {balanceTotal.toFixed(2).replace('.', ',')}</span>
-                 </button>
-                 <button onClick={() => navigate('/resultados')} className="text-emerald-400 hover:text-emerald-300 transition text-[10px] sm:text-xs font-bold flex items-center space-x-1">
-                    <span>Entrar</span>
-                    <i className="fa-solid fa-arrow-right"></i>
-                 </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       <main className="w-full relative z-10">
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">

@@ -1,5 +1,4 @@
 import { useHomeLobby } from './HomeLogada/hooks/useHomeLobby';
-import HomeHeader from './HomeLogada/components/HomeHeader';
 import GameFilters from './HomeLogada/components/GameFilters';
 import MobileGameCard from './HomeLogada/components/MobileGameCard';
 import DesktopGameTable from './HomeLogada/components/DesktopGameTable';
@@ -15,21 +14,11 @@ export default function HomeLogada() {
     setFilterState,
     handlePlayAction,
     authMode,
-    balanceTotal,
     subscribedGames,
-    userNickname,
-    openSignup,
   } = useHomeLobby();
 
   return (
     <div className="min-h-screen bg-brand-dark pb-24">
-      <HomeHeader
-        authMode={authMode}
-        userNickname={userNickname}
-        balanceTotal={balanceTotal}
-        onOpenRegister={openSignup}
-      />
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
           <div className="flex items-center space-x-3">
