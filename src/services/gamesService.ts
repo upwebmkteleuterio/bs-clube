@@ -24,6 +24,9 @@ function mapPool(row: PoolRow): Game {
     categoria: category?.name ?? category?.slug,
     concursoRef: draw?.contest,
     dataEncerramento: draw?.draw_date,
+    minNumbers: Number(row.min_numbers ?? 6),
+    maxNumbers: Number(row.max_numbers ?? 6),
+    totalLotteryNumbers: Number(row.total_lottery_numbers ?? 60),
     createdAt: row.created_at,
   };
 }
@@ -50,6 +53,16 @@ export const gamesService = {
     return (data ?? []).map(mapPool);
   },
 
+  async getResults(): Promise<Game[]> {
+    const { data, error } = await supabase
+      .from('pools')
+      .select(poolSelect)
+      .in('status', ['closed', 'completed'])
+      .order('created_at', { ascending: false });
+    if (error) throw error;
+    return (data ?? []).map(mapPool);
+  },
+
   async getById(id: string): Promise<Game | null> {
     const { data, error } = await supabase.from('pools').select(poolSelect).eq('id', id).maybeSingle();
     if (error) throw error;
@@ -69,9 +82,9 @@ export const gamesService = {
         status: gameData.estado === 'Aberto' ? 'open' : gameData.estado === 'Reg. Tardio' ? 'late_registration' : 'closed',
         filled_slots: gameData.inscritosAtuais,
         total_slots: gameData.inscritosMax,
-        min_numbers: 6,
-        max_numbers: 6,
-        total_lottery_numbers: 60,
+        min_numbers: gameData.minNumbers ?? gameData.maxNumbers ?? 6,
+        max_numbers: gameData.maxNumbers ?? gameData.minNumbers ?? 6,
+        total_lottery_numbers: gameData.totalLotteryNumbers ?? 60,
         description: '',
       })
       .select(poolSelect)
@@ -90,6 +103,9 @@ export const gamesService = {
     if (updates.tipo !== undefined) patch.game_type = updates.tipo;
     if (updates.inscritosAtuais !== undefined) patch.filled_slots = updates.inscritosAtuais;
     if (updates.inscritosMax !== undefined) patch.total_slots = updates.inscritosMax;
+    if (updates.minNumbers !== undefined) patch.min_numbers = updates.minNumbers;
+    if (updates.maxNumbers !== undefined) patch.max_numbers = updates.maxNumbers;
+    if (updates.totalLotteryNumbers !== undefined) patch.total_lottery_numbers = updates.totalLotteryNumbers;
     if (updates.estado !== undefined) {
       patch.status = updates.estado === 'Aberto' ? 'open' : updates.estado === 'Reg. Tardio' ? 'late_registration' : 'closed';
     }

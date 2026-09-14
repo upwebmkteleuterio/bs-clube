@@ -11,6 +11,9 @@ export interface Game {
   categoria?: string;
   concursoRef?: string;
   dataEncerramento?: string;
+  minNumbers?: number;
+  maxNumbers?: number;
+  totalLotteryNumbers?: number;
   createdAt?: string;
 }
 
@@ -150,11 +153,17 @@ export interface AdminUsersPage {
 
 export interface AdminCategory {
   id: number | string;
+  poolId?: string;
+  drawId?: string;
   name: string;
+  concurso?: string;
   cota: number;
   vagas: number;
   filled: number;
   drawDate: string;
+  minNumbers?: number;
+  maxNumbers?: number;
+  numbers?: number[];
   status: 'em_andamento' | 'concluido' | 'inativo';
 }
 
@@ -164,6 +173,14 @@ export interface AdminCategoryInput {
   cota: number;
   vagas: number;
   drawDate: string;
+  numbersPerBet: number;
+}
+
+export interface RegisterResultInput {
+  poolId: string;
+  drawId: string;
+  drawDate: string;
+  dezenas: number[];
 }
 
 export interface AdminFinancialMetrics {

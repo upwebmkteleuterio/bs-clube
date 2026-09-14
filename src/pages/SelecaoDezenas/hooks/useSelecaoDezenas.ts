@@ -50,7 +50,7 @@ export function useSelecaoDezenas() {
   const pixTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const draftClearedRef = useRef(false);
   const unitPrice = bolao?.cotaPrice ?? 0;
-  const numberLimit = bolao?.maxNumbers ?? 6;
+  const numberLimit = bolao?.maxNumbers ?? bolao?.minNumbers ?? 6;
   const allFinalGames: SavedBetItem[] = [...savedGames, ...(selectedNumbers.length === numberLimit ? [{ id: 'current-game', numbers: selectedNumbers }] : [])];
   const totalGamesCount = allFinalGames.length;
   const totalPrice = totalGamesCount * unitPrice;

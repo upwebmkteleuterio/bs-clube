@@ -8,6 +8,7 @@ import {
   AdminUsersQuery,
   AdminCategoryInput,
   ManualDrawInput,
+  RegisterResultInput,
 } from '../types';
 
 type Row = Record<string, any>;
@@ -79,13 +80,75 @@ function mapCategory(row: Row): AdminCategory {
   const draw = Array.isArray(pool.draws) ? pool.draws[0] : pool.draws;
   return {
     id: String(row.id),
+    poolId: pool.id ? String(pool.id) : undefined,
+    drawId: pool.draw_id ? String(pool.draw_id) : draw?.id ? String(draw.id) : undefined,
     name: row.name ?? '',
+    concurso: draw?.contest ?? '',
     cota: Number(pool.buy_in ?? 0),
     vagas: Number(pool.total_slots ?? 0),
     filled: Number(pool.filled_slots ?? 0),
     drawDate: draw?.draw_date ?? '',
+    minNumbers: Number(pool.min_numbers ?? 6),
+    maxNumbers: Number(pool.max_numbers ?? 6),
+    numbers: Array.isArray(draw?.numbers) ? draw.numbers.map(Number) : [],
     status: row.status === 'inactive' ? 'inativo' : pool.status === 'completed' ? 'concluido' : 'em_andamento',
   };
+}
+
+const categorySelect = '*, pools(*, draws(id, contest, draw_date, numbers))';
+
+async function readCategory(id: number | string): Promise<AdminCategory> {
+  const { data, error } = await supabase.from('pool_categories').select(categorySelect).eq('id', String(id)).single();
+  if (error) throw error;
+  return mapCategory(data);
+}
+
+function validateCategoryInput(data: AdminCategoryInput) {
+  if (typeof data.name !== 'string' || !data.name.trim()) {
+    throw new Error('Informe o nome do bolão.');
+  }
+  if (
+    typeof data.concurso !== 'string' ||
+    !/^\d+$/.test(data.concurso.trim()) ||
+    !Number.isSafeInteger(Number(data.concurso)) ||
+    Number(data.concurso) <= 0
+  ) {
+    throw new Error('Informe um número de concurso válido.');
+  }
+  if (
+    typeof data.cota !== 'number' ||
+    !Number.isFinite(data.cota) ||
+    data.cota <= 0 ||
+    Number(data.cota.toFixed(2)) !== data.cota ||
+    data.cota > 9999999999.99
+  ) {
+    throw new Error('Informe um valor de cota válido.');
+  }
+  if (typeof data.vagas !== 'number' || !Number.isSafeInteger(data.vagas) || data.vagas <= 0) {
+    throw new Error('Informe a quantidade de vagas.');
+  }
+  if (typeof data.drawDate !== 'string' || !isValidIsoDate(toIsoDate(data.drawDate))) {
+    throw new Error('Informe uma data de sorteio válida.');
+  }
+  if (
+    typeof data.numbersPerBet !== 'number' ||
+    !Number.isSafeInteger(data.numbersPerBet) ||
+    data.numbersPerBet < 6 ||
+    data.numbersPerBet > 20
+  ) {
+    throw new Error('A quantidade de dezenas por aposta deve estar entre 6 e 20.');
+  }
+}
+
+function validateOfficialNumbers(numbers: number[]) {
+  if (
+    !Array.isArray(numbers) ||
+    numbers.length !== 6 ||
+    numbers.some((number) => !Number.isSafeInteger(number) || number < 1 || number > 60) ||
+    new Set(numbers).size !== 6
+  ) {
+    throw new Error('Informe exatamente 6 dezenas distintas entre 01 e 60.');
+  }
 }
 
 async function requireAdmin() {
@@ -210,39 +273,14 @@ export const adminService = {
 
   async getCategories(): Promise<AdminCategory[]> {
     await requireAdmin();
-    const { data, error } = await supabase.from('pool_categories').select('*, pools(*, draws(draw_date))').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('pool_categories').select(categorySelect).order('created_at', { ascending: false });
     if (error) throw error;
     return (data ?? []).map(mapCategory);
   },
 
   async createCategory(data: AdminCategoryInput): Promise<AdminCategory> {
     await requireAdmin();
-    if (typeof data.name !== 'string' || !data.name.trim()) {
-      throw new Error('Informe o nome do bolão.');
-    }
-    if (
-      typeof data.concurso !== 'string' ||
-      !/^\d+$/.test(data.concurso.trim()) ||
-      !Number.isSafeInteger(Number(data.concurso)) ||
-      Number(data.concurso) <= 0
-    ) {
-      throw new Error('Informe um número de concurso válido.');
-    }
-    if (
-      typeof data.cota !== 'number' ||
-      !Number.isFinite(data.cota) ||
-      data.cota <= 0 ||
-      Number(data.cota.toFixed(2)) !== data.cota ||
-      data.cota > 9999999999.99
-    ) {
-      throw new Error('Informe um valor de cota válido.');
-    }
-    if (typeof data.vagas !== 'number' || !Number.isSafeInteger(data.vagas) || data.vagas <= 0) {
-      throw new Error('Informe a quantidade de vagas.');
-    }
-    if (typeof data.drawDate !== 'string' || !isValidIsoDate(toIsoDate(data.drawDate))) {
-      throw new Error('Informe uma data de sorteio válida.');
-    }
+    validateCategoryInput(data);
 
     const name = data.name.trim();
     const drawDate = toIsoDate(data.drawDate);
@@ -268,24 +306,80 @@ export const adminService = {
       status: 'open',
       filled_slots: 0,
       total_slots: data.vagas,
-      min_numbers: 6,
-      max_numbers: 6,
+      min_numbers: data.numbersPerBet,
+      max_numbers: data.numbersPerBet,
       total_lottery_numbers: 60,
     });
     if (poolError) throw poolError;
-    const { data: created, error: readError } = await supabase.from('pool_categories').select('*, pools(*, draws(draw_date))').eq('id', category.id).single();
-    if (readError) throw readError;
-    return mapCategory(created);
+    return readCategory(category.id);
   },
 
-  async updateCategory(id: number | string, data: Partial<AdminCategory>): Promise<AdminCategory> {
+  async updateCategory(id: number | string, data: AdminCategoryInput): Promise<AdminCategory> {
     await requireAdmin();
-    const patch: Record<string, unknown> = {};
-    if (data.name !== undefined) patch.name = data.name.trim();
-    if (data.status !== undefined) patch.status = data.status === 'inativo' ? 'inactive' : 'active';
-    const { data: category, error } = await supabase.from('pool_categories').update(patch).eq('id', String(id)).select('*, pools(*, draws(draw_date))').single();
-    if (error) throw error;
-    return mapCategory(category);
+    validateCategoryInput(data);
+    const { data: pool, error: poolLookupError } = await supabase
+      .from('pools')
+      .select('id, draw_id')
+      .eq('category_id', String(id))
+      .single();
+    if (poolLookupError) throw poolLookupError;
+
+    const name = data.name.trim();
+    const drawDate = toIsoDate(data.drawDate);
+    const { error: categoryError } = await supabase
+      .from('pool_categories')
+      .update({ name, slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') })
+      .eq('id', String(id));
+    if (categoryError) throw categoryError;
+    const { error: poolError } = await supabase
+      .from('pools')
+      .update({
+        name,
+        buy_in: data.cota,
+        total_slots: data.vagas,
+        min_numbers: data.numbersPerBet,
+        max_numbers: data.numbersPerBet,
+      })
+      .eq('id', pool.id);
+    if (poolError) throw poolError;
+    const { error: drawError } = await supabase
+      .from('draws')
+      .update({ contest: data.concurso.trim(), draw_date: drawDate })
+      .eq('id', pool.draw_id);
+    if (drawError) throw drawError;
+    return readCategory(id);
+  },
+
+  async registerOfficialResult(input: RegisterResultInput): Promise<AdminCategory> {
+    await requireAdmin();
+    if (!input.poolId || !input.drawId) throw new Error('Bolão inválido para registrar o resultado.');
+    if (typeof input.drawDate !== 'string' || !isValidIsoDate(toIsoDate(input.drawDate))) {
+      throw new Error('Informe uma data de sorteio válida.');
+    }
+    validateOfficialNumbers(input.dezenas);
+    const { data: pool, error: poolLookupError } = await supabase
+      .from('pools')
+      .select('draw_id')
+      .eq('id', input.poolId)
+      .single();
+    if (poolLookupError) throw poolLookupError;
+    if (String(pool.draw_id) !== String(input.drawId)) {
+      throw new Error('O resultado não corresponde ao sorteio deste bolão.');
+    }
+    const { error: drawError } = await supabase
+      .from('draws')
+      .update({ numbers: input.dezenas, draw_date: toIsoDate(input.drawDate), is_published: true })
+      .eq('id', input.drawId);
+    if (drawError) throw drawError;
+    const { error: poolError } = await supabase.from('pools').update({ status: 'completed' }).eq('id', input.poolId);
+    if (poolError) throw poolError;
+    const { data: poolCategory, error: categoryError } = await supabase
+      .from('pools')
+      .select('category_id')
+      .eq('id', input.poolId)
+      .single();
+    if (categoryError) throw categoryError;
+    return readCategory(poolCategory.category_id);
   },
 
   async executeManualDraw(input: ManualDrawInput): Promise<{ message: string; drawnNumbers: number[] }> {

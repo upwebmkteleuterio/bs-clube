@@ -3,12 +3,21 @@ import { gamesService } from '../services/gamesService';
 import { Game } from '../types';
 
 export const GAMES_QUERY_KEY = ['games'];
+export const RESULTS_GAMES_QUERY_KEY = ['games', 'results'];
 
 export function useGames() {
   return useQuery({
     queryKey: GAMES_QUERY_KEY,
     queryFn: () => gamesService.getAll(),
     staleTime: 1000 * 60 * 5, // 5 minutes
+  });
+}
+
+export function useResultsGames() {
+  return useQuery({
+    queryKey: RESULTS_GAMES_QUERY_KEY,
+    queryFn: () => gamesService.getResults(),
+    staleTime: 1000 * 60 * 5,
   });
 }
 

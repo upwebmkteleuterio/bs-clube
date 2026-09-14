@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService } from '../services/adminService';
-import { AdminCategoryInput, AdminUserStatus, ManualDrawInput } from '../types';
+import { RESULTS_GAMES_QUERY_KEY } from './useGames';
+import { AdminCategoryInput, AdminUserStatus, RegisterResultInput } from '../types';
 
 export const ADMIN_METRICS_KEY = ['admin', 'metrics'];
 export const ADMIN_WITHDRAWALS_KEY = ['admin', 'withdrawals'];
@@ -97,20 +98,36 @@ export function useCreateCategory() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_CATEGORIES_KEY });
       queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.invalidateQueries({ queryKey: RESULTS_GAMES_QUERY_KEY });
       queryClient.invalidateQueries({ queryKey: ['draws'] });
     },
   });
 }
 
-export function useExecuteManualDraw() {
+export function useUpdateCategory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: ManualDrawInput) => adminService.executeManualDraw(data),
+    mutationFn: ({ id, data }: { id: number | string; data: AdminCategoryInput }) =>
+      adminService.updateCategory(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ADMIN_CATEGORIES_KEY });
+      queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.invalidateQueries({ queryKey: RESULTS_GAMES_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['draws'] });
+    },
+  });
+}
+
+export function useRegisterOfficialResult() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: RegisterResultInput) => adminService.registerOfficialResult(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_CATEGORIES_KEY });
       queryClient.invalidateQueries({ queryKey: ADMIN_METRICS_KEY });
-      queryClient.invalidateQueries({ queryKey: ['draws'] });
       queryClient.invalidateQueries({ queryKey: ['games'] });
+      queryClient.invalidateQueries({ queryKey: RESULTS_GAMES_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['draws'] });
     },
   });
 }

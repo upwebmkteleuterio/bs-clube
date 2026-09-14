@@ -5,7 +5,6 @@ interface AdminSidebarProps {
   isOpen: boolean;
   isCollapsed?: boolean;
   onClose: () => void;
-  onOpenManualDraw: () => void;
   activeView?: 'dashboard' | 'users' | 'categories';
   onSelectView?: (view: 'dashboard' | 'users' | 'categories') => void;
 }
@@ -14,7 +13,6 @@ export default function AdminSidebar({
   isOpen,
   isCollapsed = false,
   onClose,
-  onOpenManualDraw,
   onSelectView,
 }: AdminSidebarProps) {
   return (
@@ -104,7 +102,7 @@ export default function AdminSidebar({
 
           <NavLink
             to="/admin/categorias"
-            title={isCollapsed ? 'Categorias de Bolão' : undefined}
+            title={isCollapsed ? 'Bolões' : undefined}
             onClick={() => {
               onSelectView?.('categories');
               onClose();
@@ -118,25 +116,8 @@ export default function AdminSidebar({
             }
           >
             <i className="fa-solid fa-tags w-5 text-left"></i>
-            <span className={isCollapsed ? 'md:hidden' : ''}>Categorias de Bolão</span>
+            <span className={isCollapsed ? 'md:hidden' : ''}>Bolões</span>
           </NavLink>
-
-          <div className={`px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider ${isCollapsed ? 'md:hidden' : ''}`}>
-            Operacional
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              onOpenManualDraw();
-              onClose();
-            }}
-            className={`flex items-center px-6 py-3 ${isCollapsed ? 'md:px-0 md:justify-center' : ''} text-sm font-medium text-amber-400 hover:bg-slate-800 hover:text-amber-300 transition border-l-2 border-transparent hover:border-amber-400 cursor-pointer`}
-            title={isCollapsed ? 'Sorteio Manual' : undefined}
-          >
-            <i className="fa-solid fa-bolt w-5 text-left"></i>
-            <span className={isCollapsed ? 'md:hidden' : ''}>Sorteio Manual</span>
-          </button>
 
           <div className={`px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-wider ${isCollapsed ? 'md:hidden' : ''}`}>
             Atalhos

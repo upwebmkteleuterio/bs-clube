@@ -8,10 +8,11 @@ import UsersManagementTable from './AdminDashboard/components/UsersManagementTab
 import CategoriesManagementTable from './AdminDashboard/components/CategoriesManagementTable';
 import WithdrawalAnalysisModal from './AdminDashboard/components/WithdrawalAnalysisModal';
 import NewCategoryModal from './AdminDashboard/components/NewCategoryModal';
-import ManualDrawModal from './AdminDashboard/components/ManualDrawModal';
+import RegisterResultModal from './AdminDashboard/components/RegisterResultModal';
 import AdminFeedbackModal from './AdminDashboard/components/AdminFeedbackModal';
 
 export default function AdminDashboard() {
+  const state = useAdminDashboardState();
   const {
     isSidebarOpen,
     setIsSidebarOpen,
@@ -21,8 +22,10 @@ export default function AdminDashboard() {
     setWithdrawalModal,
     isCategoryModalOpen,
     setIsCategoryModalOpen,
-    isManualDrawModalOpen,
-    setIsManualDrawModalOpen,
+    editingCategory,
+    setEditingCategory,
+    resultCategory,
+    setResultCategory,
     alertConfig,
     setAlertConfig,
     userSearchTerm,
@@ -33,33 +36,32 @@ export default function AdminDashboard() {
     isMetricsLoading,
     pendingWithdrawals,
     isWithdrawalsLoading,
-    users,
     filteredUsers,
     isUsersLoading,
     categories,
     isCategoriesLoading,
     isProcessingWithdrawal,
     isCreatingCategory,
-    isExecutingDraw,
+    isRegisteringResult,
     handleApproveWithdrawal,
     handleRejectWithdrawal,
     handleToggleUser,
     handleCreateCategory,
-    handleExecuteDraw,
-  } = useAdminDashboardState();
+    handleUpdateCategory,
+    handleRegisterResult,
+  } = state;
+
+  const categorySubmit = editingCategory ? handleUpdateCategory : handleCreateCategory;
 
   return (
     <div className="flex h-screen overflow-hidden bg-brand-dark text-slate-50 font-sans">
-      {/* Sidebar Navigation */}
       <AdminSidebar
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
         activeView={activeView}
         onSelectView={setActiveView}
-        onOpenManualDraw={() => setIsManualDrawModalOpen(true)}
       />
 
-      {/* Main Content Area */}
       <main className="flex-1 flex flex-col h-screen relative overflow-hidden bg-brand-dark">
         <AdminHeader
           activeView={activeView}
@@ -83,7 +85,7 @@ export default function AdminDashboard() {
             <div className="max-w-7xl mx-auto">
               <UsersManagementTable
                 users={filteredUsers}
-                totalCount={users.length}
+                totalCount={filteredUsers.length}
                 isLoading={isUsersLoading}
                 searchTerm={userSearchTerm}
                 onSearchChange={setUserSearchTerm}
@@ -99,14 +101,21 @@ export default function AdminDashboard() {
               <CategoriesManagementTable
                 categories={categories}
                 isLoading={isCategoriesLoading}
-                onOpenNewCategory={() => setIsCategoryModalOpen(true)}
+                onOpenNewCategory={() => {
+                  setEditingCategory(null);
+                  setIsCategoryModalOpen(true);
+                }}
+                onEditCategory={(category) => {
+                  setEditingCategory(category);
+                  setIsCategoryModalOpen(true);
+                }}
+                onRegisterResult={setResultCategory}
               />
             </div>
           )}
         </div>
       </main>
 
-      {/* Interactive Modals */}
       <WithdrawalAnalysisModal
         isOpen={Boolean(withdrawalModal)}
         withdrawal={withdrawalModal}
@@ -118,22 +127,24 @@ export default function AdminDashboard() {
 
       <NewCategoryModal
         isOpen={isCategoryModalOpen}
-        onClose={() => setIsCategoryModalOpen(false)}
-        onSubmit={handleCreateCategory}
+        category={editingCategory}
+        onClose={() => {
+          setIsCategoryModalOpen(false);
+          setEditingCategory(null);
+        }}
+        onSubmit={categorySubmit}
         isSubmitting={isCreatingCategory}
       />
 
-      <ManualDrawModal
-        isOpen={isManualDrawModalOpen}
-        onClose={() => setIsManualDrawModalOpen(false)}
-        onSubmit={handleExecuteDraw}
-        isExecuting={isExecutingDraw}
+      <RegisterResultModal
+        isOpen={Boolean(resultCategory)}
+        category={resultCategory}
+        onClose={() => setResultCategory(null)}
+        onSubmit={handleRegisterResult}
+        isSubmitting={isRegisteringResult}
       />
 
-      <AdminFeedbackModal
-        config={alertConfig}
-        onClose={() => setAlertConfig(null)}
-      />
+      <AdminFeedbackModal config={alertConfig} onClose={() => setAlertConfig(null)} />
     </div>
   );
 }

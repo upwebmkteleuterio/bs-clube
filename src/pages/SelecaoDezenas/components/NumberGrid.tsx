@@ -44,7 +44,7 @@ export default function NumberGrid({
             type="button"
             onClick={onGenerateSurpresinha}
             className="flex items-center space-x-1.5 border border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm cursor-pointer"
-            title="Gera 6 dezenas aleatórias na cartela atual"
+            title={`Gera ${requiredNumbers} dezenas aleatórias na cartela atual`}
           >
             <i className="fa-solid fa-wand-magic-sparkles"></i>
             <span>Surpresinha</span>

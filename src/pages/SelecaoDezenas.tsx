@@ -97,6 +97,7 @@ export default function SelecaoDezenas() {
         totalPrice={totalPrice}
         selectedNumbersCount={selectedNumbers.length}
         savedGamesCount={savedGames.length}
+        requiredNumbers={numberLimit}
         bolaoTitle={bolao?.nome || 'SORTEIO BIG 10'}
         onClearAll={handleClearAllGames}
         onConfirm={handleConfirm}

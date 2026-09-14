@@ -5,6 +5,7 @@ interface BottomConfirmationBarProps {
   totalPrice: number;
   selectedNumbersCount: number;
   savedGamesCount: number;
+  requiredNumbers: number;
   bolaoTitle?: string;
   onClearAll: () => void;
   onConfirm: () => void;
@@ -15,15 +16,16 @@ export default function BottomConfirmationBar({
   totalPrice,
   selectedNumbersCount,
   savedGamesCount,
+  requiredNumbers,
   bolaoTitle = 'SORTEIO BIG 10',
   onClearAll,
   onConfirm,
 }: BottomConfirmationBarProps) {
   const getSubtitle = () => {
     if (totalGamesCount === 0) {
-      return 'Selecione 6 dezenas ou gere surpresinhas para continuar';
+      return `Selecione ${requiredNumbers} dezenas ou gere surpresinhas para continuar`;
     }
-    if (selectedNumbersCount === 6) {
+    if (selectedNumbersCount === requiredNumbers) {
       return `${savedGamesCount} na lista + 1 no volante atual`;
     }
     return `${savedGamesCount} jogos salvos`;

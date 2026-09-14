@@ -19,8 +19,8 @@ const VIEW_TITLES = {
     sub: 'Lista de apostadores cadastrados, controle de saldo e status de conta.',
   },
   categories: {
-    title: 'Categorias de Bolões',
-    sub: 'Configuração e monitoramento de modalidades ativas na vitrine.',
+    title: 'Bolões',
+    sub: 'Configuração e monitoramento de bolões ativos na vitrine.',
   },
 };
 

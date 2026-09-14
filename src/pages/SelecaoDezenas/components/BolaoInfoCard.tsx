@@ -26,7 +26,8 @@ export default function BolaoInfoCard({ bolao, pools, isLoading, isPoolsLoading,
   const cotaPrice = bolao?.cotaPrice ?? 10;
   const vagas = bolao?.vagasPreenchidas ?? 12;
   const vagasTotal = bolao?.vagasTotal ?? 100;
-  const description = bolao?.descricao || 'Marque 6 dezenas ou gere múltiplos jogos nesta mesma tela para concorrer.';
+  const requiredNumbers = bolao?.maxNumbers ?? bolao?.minNumbers ?? 6;
+  const description = bolao?.descricao || `Marque ${requiredNumbers} dezenas ou gere múltiplos jogos nesta mesma tela para concorrer.`;
   const poolOptions = pools.length > 0 ? pools : bolao ? [bolao] : [];
 
   return (

@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import AppHeader from '../components/AppHeader';
 import BottomNav from '../components/BottomNav';
-import PrototypeMenu from '../components/PrototypeMenu';
 
 export default function AppLayout() {
   return (
@@ -11,7 +10,6 @@ export default function AppLayout() {
         <Outlet />
       </div>
       <BottomNav />
-      <PrototypeMenu />
     </div>
   );
 }
