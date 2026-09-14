@@ -162,8 +162,16 @@ export default function AuthPage({ view }: { view: 'sign_in' | 'sign_up' }) {
   }, [navigate, returnTo, session]);
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-brand-dark px-4 py-10 text-slate-50">
-      <section className="glass-card w-full max-w-md rounded-3xl border border-slate-800 p-6 shadow-2xl sm:p-8">
+    <main className="relative flex min-h-screen items-center justify-center bg-brand-dark px-4 py-10 text-slate-50">
+      <nav className="absolute inset-x-0 top-0 border-b border-slate-800/80 bg-brand-dark/95 px-4 py-4 backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-5xl items-center">
+          <button type="button" onClick={() => navigate('/')} className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-400 transition hover:bg-slate-900 hover:text-white focus:outline-none focus:ring-2 focus:ring-emerald-400" aria-label="Voltar para a página inicial">
+            <i className="fa-solid fa-arrow-left" aria-hidden="true" />
+            <span>Voltar</span>
+          </button>
+        </div>
+      </nav>
+      <section className="glass-card mt-12 w-full max-w-md rounded-3xl border border-slate-800 p-6 shadow-2xl sm:p-8">
         <div className="mb-6 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-2xl text-white shadow-lg shadow-emerald-950/40">
             <i className={`fa-solid ${view === 'sign_in' ? 'fa-arrow-right-to-bracket' : 'fa-user-plus'}`} />
