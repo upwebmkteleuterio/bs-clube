@@ -6,8 +6,6 @@ interface BottomConfirmationBarProps {
   selectedNumbersCount: number;
   savedGamesCount: number;
   requiredNumbers: number;
-  bolaoTitle?: string;
-  onClearAll: () => void;
   onConfirm: () => void;
 }
 
@@ -17,8 +15,6 @@ export default function BottomConfirmationBar({
   selectedNumbersCount,
   savedGamesCount,
   requiredNumbers,
-  bolaoTitle = 'Bolão indisponível',
-  onClearAll,
   onConfirm,
 }: BottomConfirmationBarProps) {
   const getSubtitle = () => {
@@ -52,28 +48,12 @@ export default function BottomConfirmationBar({
         <div className="flex items-center space-x-3 w-full sm:w-auto">
           <button
             type="button"
-            onClick={onClearAll}
-            className="flex-1 sm:flex-none border border-slate-700 bg-slate-900 text-slate-400 hover:text-white hover:bg-slate-800 py-3.5 px-6 rounded-xl text-xs font-bold transition flex justify-center items-center space-x-2 cursor-pointer"
-          >
-            <i className="fa-solid fa-rotate-left"></i>
-            <span>LIMPAR TUDO</span>
-          </button>
-
-          <button
-            type="button"
             disabled={totalGamesCount === 0}
             onClick={onConfirm}
-            className="flex-[2] sm:flex-none bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3.5 px-8 rounded-xl text-sm font-black transition flex justify-center items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:shadow-none transform active:scale-95 cursor-pointer"
+            className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-3.5 px-8 rounded-xl text-sm font-black transition flex justify-center items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:shadow-none transform active:scale-95 cursor-pointer"
           >
             <i className="fa-solid fa-check"></i>
-            <span>
-              CONFIRMAR{' '}
-              {totalGamesCount > 0
-                ? `(${totalGamesCount} ${
-                    totalGamesCount === 1 ? 'JOGO' : 'JOGOS'
-                  } • R$ ${totalPrice.toFixed(2).replace('.', ',')})`
-                : `(${bolaoTitle.toUpperCase()})`}
-            </span>
+            <span>CONFIRMAR JOGO</span>
           </button>
         </div>
       </div>

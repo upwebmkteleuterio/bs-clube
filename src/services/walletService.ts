@@ -156,16 +156,7 @@ export const walletService = {
     });
     if (error) throw error;
     const row = rpcRow(data);
-    const transaction: UserTransaction = {
-      id: String(row.id),
-      type: 'withdraw',
-      title: 'Saque Solicitado',
-      date: row.created_at ?? '',
-      value: -Math.abs(Number(row.amount ?? amount)),
-      status: row.status ?? 'pending',
-      pixKeyType,
-      pixKey,
-    };
+    const transaction = mapWithdrawal(row);
     return { balance: await this.getBalance(), transaction };
   },
 };

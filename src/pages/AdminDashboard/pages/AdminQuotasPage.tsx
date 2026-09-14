@@ -39,7 +39,7 @@ export default function AdminQuotasPage() {
     if (window.confirm(`Excluir a cota "${quota.name}"? Bolões antigos não serão alterados.`)) deleteMutation.mutate(quota.id);
   };
 
-  return <div className="max-w-4xl mx-auto space-y-6">
+  return <div className="max-w-7xl mx-auto space-y-6">
     <div><h3 className="font-heading text-2xl font-black text-white">Catálogo de cotas</h3><p className="text-sm text-slate-400 mt-1">Gerencie opções usadas pelos novos bolões. Valores antigos permanecem congelados no bolão.</p></div>
     <form onSubmit={submit} className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 flex flex-col sm:flex-row gap-3">
       <label className="flex-1 text-xs text-slate-400">Nome<input value={name} onChange={(e) => setName(e.target.value)} required maxLength={120} className="mt-1 w-full rounded-xl bg-slate-950 border border-slate-700 px-3 py-2.5 text-sm text-white focus:border-emerald-400 focus:outline-none" placeholder="Cota R$ 10" /></label>

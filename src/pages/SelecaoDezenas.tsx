@@ -61,7 +61,7 @@ export default function SelecaoDezenas() {
         </div>
       )}
 
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-52 space-y-6">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-[18rem] sm:pb-52 space-y-6">
         {/* Card de informações do bolão, carregado a partir do banco de dados */}
         <BolaoInfoCard
           bolao={bolao}
@@ -98,8 +98,6 @@ export default function SelecaoDezenas() {
         selectedNumbersCount={selectedNumbers.length}
         savedGamesCount={savedGames.length}
         requiredNumbers={numberLimit}
-        bolaoTitle={bolao?.nome ?? 'Bolão indisponível'}
-        onClearAll={handleClearAllGames}
         onConfirm={handleConfirm}
       />
 

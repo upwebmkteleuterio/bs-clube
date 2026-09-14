@@ -25,6 +25,12 @@ function formatCpf(value: string) {
   return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 }
 
+function formatPixKey(value: string, type: PixKeyType | '') {
+  if (type === 'cpf') return formatCpf(value);
+  if (type === 'phone') return formatPhone(value);
+  return value.slice(0, 200);
+}
+
 export default function Perfil() {
   const navigate = useNavigate();
   const { user, role, signOut } = useAuth();
@@ -48,8 +54,17 @@ export default function Perfil() {
     setFullName(profile.fullName ?? '');
     setPhone(formatPhone(profile.phone ?? ''));
     setPixKeyType(profile.pixKeyType ?? '');
-    setPixKey(profile.pixKey ?? '');
+    setPixKey(formatPixKey(profile.pixKey ?? '', profile.pixKeyType ?? ''));
   }, [profile]);
+
+  const handlePixKeyTypeChange = (value: PixKeyType | '') => {
+    setPixKeyType(value);
+    setPixKey('');
+  };
+
+  const handlePixKeyChange = (value: string) => {
+    setPixKey(formatPixKey(value, pixKeyType));
+  };
 
   const handleSignOut = async () => {
     await signOut();
@@ -145,7 +160,7 @@ export default function Perfil() {
           <h4 className="text-sm font-bold text-white flex items-center gap-2"><i className="fa-brands fa-pix text-brand-pix" /><span>Chave Pix para Resgates</span></h4>
           <div>
             <label htmlFor="profile-pix-key-type" className="text-[10px] text-slate-500 block uppercase mb-1">Tipo da chave</label>
-            <select id="profile-pix-key-type" value={pixKeyType} onChange={(event) => setPixKeyType(event.target.value as PixKeyType | '')} disabled={isProfileLoading || updateProfile.isPending} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60">
+            <select id="profile-pix-key-type" value={pixKeyType} onChange={(event) => handlePixKeyTypeChange(event.target.value as PixKeyType | '')} disabled={isProfileLoading || updateProfile.isPending} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60">
               <option value="">Selecione</option>
               <option value="cpf">CPF</option>
               <option value="email">E-mail</option>
@@ -155,7 +170,17 @@ export default function Perfil() {
           </div>
           <div>
             <label htmlFor="profile-pix-key" className="text-[10px] text-slate-500 block uppercase mb-1">Chave Pix</label>
-            <input id="profile-pix-key" value={pixKey} onChange={(event) => setPixKey(event.target.value)} maxLength={200} disabled={isProfileLoading || updateProfile.isPending} placeholder="Informe sua chave Pix" className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
+            <input
+              id="profile-pix-key"
+              type={pixKeyType === 'email' ? 'email' : 'text'}
+              inputMode={pixKeyType === 'cpf' || pixKeyType === 'phone' ? 'numeric' : undefined}
+              value={pixKey}
+              onChange={(event) => handlePixKeyChange(event.target.value)}
+              maxLength={pixKeyType === 'cpf' ? 14 : pixKeyType === 'phone' ? 15 : 200}
+              disabled={isProfileLoading || updateProfile.isPending}
+              placeholder="Informe sua chave Pix"
+              className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60"
+            />
           </div>
           <div className="flex flex-col gap-2">
             {pixError && <p className="text-xs text-rose-300" role="alert">{pixError}</p>}

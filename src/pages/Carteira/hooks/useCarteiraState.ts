@@ -7,6 +7,24 @@ import {
 } from '../../../hooks/useWallet';
 import { UserTransaction, WalletTransactionFilter } from '../../../types';
 
+function formatWithdrawKey(value: string, type: string) {
+  if (type === 'cpf') {
+    const cpf = value.replace(/\D/g, '').slice(0, 11);
+    if (cpf.length <= 3) return cpf;
+    if (cpf.length <= 6) return `${cpf.slice(0, 3)}.${cpf.slice(3)}`;
+    if (cpf.length <= 9) return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6)}`;
+    return `${cpf.slice(0, 3)}.${cpf.slice(3, 6)}.${cpf.slice(6, 9)}-${cpf.slice(9)}`;
+  }
+  if (type === 'phone') {
+    const phone = value.replace(/\D/g, '').slice(0, 11);
+    if (phone.length <= 2) return phone ? `(${phone}` : '';
+    if (phone.length <= 6) return `(${phone.slice(0, 2)}) ${phone.slice(2)}`;
+    if (phone.length <= 10) return `(${phone.slice(0, 2)}) ${phone.slice(2, 6)}-${phone.slice(6)}`;
+    return `(${phone.slice(0, 2)}) ${phone.slice(2, 7)}-${phone.slice(7)}`;
+  }
+  return value.slice(0, 200);
+}
+
 export function useCarteiraState() {
   const { data: balance, isLoading: isBalanceLoading } = useWalletBalance();
   const [transactionFilter, setTransactionFilter] = useState<WalletTransactionFilter>('all');
@@ -32,6 +50,15 @@ export function useCarteiraState() {
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawKeyType, setWithdrawKeyType] = useState('cpf');
   const [withdrawKey, setWithdrawKey] = useState('');
+
+  const handleWithdrawKeyTypeChange = (value: string) => {
+    setWithdrawKeyType(value);
+    setWithdrawKey('');
+  };
+
+  const handleWithdrawKeyChange = (value: string) => {
+    setWithdrawKey(formatWithdrawKey(value, withdrawKeyType));
+  };
 
   const [pixTimer, setPixTimer] = useState(15 * 60);
   const [pixCode, setPixCode] = useState<string | undefined>();
@@ -137,9 +164,9 @@ export function useCarteiraState() {
     withdrawAmount,
     setWithdrawAmount,
     withdrawKeyType,
-    setWithdrawKeyType,
+    handleWithdrawKeyTypeChange,
     withdrawKey,
-    setWithdrawKey,
+    handleWithdrawKeyChange,
     pixTimer,
     pixCode,
     handleDepositInput,

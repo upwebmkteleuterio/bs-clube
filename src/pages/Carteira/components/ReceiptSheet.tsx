@@ -20,6 +20,12 @@ export default function ReceiptSheet({
   const isDeposit = transaction.type === 'deposit';
   const isWithdraw = transaction.type === 'withdraw';
   const isPrize = transaction.type === 'prize';
+  const pixKeyTypeLabel: Record<string, string> = {
+    cpf: 'CPF',
+    email: 'E-mail',
+    phone: 'Telefone',
+    random: 'Chave aleatória',
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
@@ -87,10 +93,16 @@ export default function ReceiptSheet({
               {transaction.type === 'bet' ? 'Saldo da Carteira' : 'Pix Instantâneo'}
             </strong>
           </div>
-          {transaction.pixKey && (
+          {isWithdraw && transaction.pixKeyType && (
             <div className="flex justify-between">
+              <span className="text-slate-400">Tipo da Chave Pix:</span>
+              <strong className="text-slate-200">{pixKeyTypeLabel[transaction.pixKeyType] ?? transaction.pixKeyType}</strong>
+            </div>
+          )}
+          {isWithdraw && transaction.pixKey && (
+            <div className="flex justify-between gap-4">
               <span className="text-slate-400">Chave Pix:</span>
-              <strong className="text-slate-200">{transaction.pixKey}</strong>
+              <strong className="break-all text-right text-slate-200">{transaction.pixKey}</strong>
             </div>
           )}
           <div className="flex justify-between border-t border-slate-800 pt-3 mt-1">

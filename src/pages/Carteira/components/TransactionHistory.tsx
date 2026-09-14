@@ -27,6 +27,13 @@ export default function TransactionHistory({
   const formatCurrency = (val: number) =>
     `R$ ${Math.abs(val).toFixed(2).replace('.', ',')}`;
 
+  const pixKeyTypeLabel: Record<string, string> = {
+    cpf: 'CPF',
+    email: 'E-mail',
+    phone: 'Telefone',
+    random: 'Chave aleatória',
+  };
+
   return (
     <section className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1">
@@ -160,9 +167,15 @@ export default function TransactionHistory({
               >
                 <div className="flex items-center space-x-3">
                   {iconElement}
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-sm font-semibold text-white">{t.title}</p>
                     <span className="text-[10px] text-slate-500">{t.date}</span>
+                    {t.type === 'withdraw' && (t.pixKeyType || t.pixKey) && (
+                      <div className="mt-1 max-w-[13rem] space-y-0.5 text-[10px] text-slate-400">
+                        {t.pixKeyType && <p>Tipo Pix: {pixKeyTypeLabel[t.pixKeyType] ?? t.pixKeyType}</p>}
+                        {t.pixKey && <p className="break-all">Chave Pix: {t.pixKey}</p>}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">

@@ -34,9 +34,9 @@ export default function Carteira() {
     withdrawAmount,
     setWithdrawAmount,
     withdrawKeyType,
-    setWithdrawKeyType,
+    handleWithdrawKeyTypeChange,
     withdrawKey,
-    setWithdrawKey,
+    handleWithdrawKeyChange,
     pixTimer,
     pixCode,
     handleDepositInput,
@@ -63,7 +63,7 @@ export default function Carteira() {
             }}
             onOpenWithdraw={() => {
               setWithdrawAmount('');
-              setWithdrawKey('');
+              handleWithdrawKeyChange('');
               setIsWithdrawModalOpen(true);
             }}
           />
@@ -107,9 +107,9 @@ export default function Carteira() {
         withdrawAmount={withdrawAmount}
         onWithdrawAmountChange={setWithdrawAmount}
         withdrawKeyType={withdrawKeyType}
-        onWithdrawKeyTypeChange={setWithdrawKeyType}
+        onWithdrawKeyTypeChange={handleWithdrawKeyTypeChange}
         withdrawKey={withdrawKey}
-        onWithdrawKeyChange={setWithdrawKey}
+        onWithdrawKeyChange={handleWithdrawKeyChange}
         onSetMax={setWithdrawMax}
         onProcessWithdraw={processWithdraw}
         isProcessing={isProcessingWithdraw}

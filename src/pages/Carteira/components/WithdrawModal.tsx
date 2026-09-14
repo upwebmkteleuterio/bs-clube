@@ -99,7 +99,9 @@ export default function WithdrawModal({
               Sua Chave Pix
             </label>
             <input
-              type="text"
+              type={withdrawKeyType === 'email' ? 'email' : 'text'}
+              inputMode={withdrawKeyType === 'cpf' || withdrawKeyType === 'phone' ? 'numeric' : undefined}
+              maxLength={withdrawKeyType === 'cpf' ? 14 : withdrawKeyType === 'phone' ? 15 : 200}
               value={withdrawKey}
               onChange={(e) => onWithdrawKeyChange(e.target.value)}
               placeholder="Digite sua chave..."
