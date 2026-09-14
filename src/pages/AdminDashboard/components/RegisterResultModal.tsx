@@ -57,7 +57,7 @@ export default function RegisterResultModal({ isOpen, category, onClose, onSubmi
   return (
     <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
       <div className="glass-card w-full max-w-lg rounded-3xl border border-amber-500/30 p-6 relative shadow-2xl">
-        <button type="button" onClick={onClose} disabled={isSubmitting} className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 focus:outline-none focus:ring-2 focus:ring-amber-400 rounded" aria-label="Fechar">
+        <button type="button" onClick={onClose} disabled={isSubmitting} className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 cursor-pointer disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-amber-400 rounded" aria-label="Fechar">
           <i className="fa-solid fa-xmark text-lg"></i>
         </button>
         <div className="mb-5 border-b border-slate-800 pb-4">
@@ -83,7 +83,7 @@ export default function RegisterResultModal({ isOpen, category, onClose, onSubmi
           <div className="bg-amber-500/10 p-3.5 rounded-xl border border-amber-500/20 text-[11px] text-amber-200/90 leading-relaxed">
             Publicar o resultado encerra este bolão como concluído e disponibiliza o ranking e o resultado para os usuários.
           </div>
-          <button type="submit" disabled={isSubmitting} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 shadow-lg shadow-amber-900/30">
+          <button type="submit" disabled={isSubmitting} className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition flex items-center justify-center space-x-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 shadow-lg shadow-amber-900/30">
             {isSubmitting ? <><i className="fa-solid fa-circle-notch fa-spin"></i><span>Publicando...</span></> : <><i className="fa-solid fa-check"></i><span>Publicar resultado</span></>}
           </button>
         </form>

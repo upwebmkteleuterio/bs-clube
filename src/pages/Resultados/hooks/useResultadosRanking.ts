@@ -5,6 +5,7 @@ import { useWalletBalance } from '../../../hooks/useWallet';
 import { useDraws } from '../../../hooks/useDraws';
 import { useResultsGames } from '../../../hooks/useGames';
 import { useRankings } from '../../../hooks/useRankings';
+import { useOwnPrizeAwards } from '../../../hooks/usePrizeAwards';
 import { OfficialDraw, Game } from '../../../types';
 
 export function useResultadosRanking() {
@@ -39,6 +40,7 @@ export function useResultadosRanking() {
     rankingGameId,
     activeDraw?.id,
   );
+  const { data: ownPrizeAwards = [], isLoading: isLoadingPrizeAwards } = useOwnPrizeAwards(rankingGameId);
 
   // Hits are calculated by the ranking RPC from the selected official draw.
   const ranking = useMemo(() => {
@@ -67,7 +69,7 @@ export function useResultadosRanking() {
     navigate('/login', { state: { from: '/resultados' } });
   };
 
-  const isLoading = isLoadingDraws || isLoadingGames || isLoadingParticipants;
+  const isLoading = isLoadingDraws || isLoadingGames || isLoadingParticipants || isLoadingPrizeAwards;
 
   return {
     draws,
@@ -78,6 +80,7 @@ export function useResultadosRanking() {
     setSelectedDrawId,
     activeDraw,
     activeGame,
+    ownPrizeAwards,
     ranking,
     searchTerm,
     setSearchTerm,

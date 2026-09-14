@@ -48,7 +48,7 @@ export default function AdminHeader({
       <div className="flex items-center space-x-4">
         <button
           type="button"
-          className="hidden md:flex text-slate-400 hover:text-white p-2 rounded-lg bg-slate-900 border border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="hidden md:flex text-slate-400 hover:text-white p-2 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
           onClick={onToggleSidebarCollapse}
           aria-label={isSidebarCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
           aria-expanded={!isSidebarCollapsed}
@@ -58,7 +58,7 @@ export default function AdminHeader({
         </button>
         <button
           type="button"
-          className="md:hidden text-slate-400 hover:text-white p-2 rounded-lg bg-slate-900 border border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="md:hidden text-slate-400 hover:text-white p-2 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500"
           onClick={onToggleSidebar}
           aria-label="Abrir menu"
         >
@@ -77,7 +77,7 @@ export default function AdminHeader({
       <div className="flex items-center space-x-3">
         <Link
           to="/"
-          className="hidden sm:flex items-center space-x-2 text-xs font-semibold text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 px-3 py-2 rounded-xl transition"
+          className="hidden sm:flex items-center space-x-2 text-xs font-semibold text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 border border-slate-700/80 px-3 py-2 rounded-xl transition cursor-pointer"
         >
           <i className="fa-solid fa-arrow-up-right-from-square text-emerald-400"></i>
           <span>Ver App</span>
@@ -86,7 +86,7 @@ export default function AdminHeader({
         <div className="relative">
           <button
             type="button"
-            className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition"
+            className="w-10 h-10 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-400 hover:text-white transition cursor-pointer"
             aria-label="Notificações"
           >
             <i className="fa-regular fa-bell"></i>

@@ -7,15 +7,16 @@ import WithdrawalAnalysisModal from '../pages/AdminDashboard/components/Withdraw
 import NewCategoryModal from '../pages/AdminDashboard/components/NewCategoryModal';
 import RegisterResultModal from '../pages/AdminDashboard/components/RegisterResultModal';
 import AdminFeedbackModal from '../pages/AdminDashboard/components/AdminFeedbackModal';
+import PrizeSettingsModal from '../pages/AdminDashboard/components/PrizeSettingsModal';
 
 function AdminLayoutInner() {
   const {
     isSidebarOpen, setIsSidebarOpen, isSidebarCollapsed, setIsSidebarCollapsed,
     withdrawalModal, setWithdrawalModal, isCategoryModalOpen, setIsCategoryModalOpen,
-    editingCategory, setEditingCategory, resultCategory, setResultCategory,
-    alertConfig, setAlertConfig, pendingWithdrawals, isProcessingWithdrawal,
-    isCreatingCategory, isRegisteringResult, handleApproveWithdrawal, handleRejectWithdrawal,
-    handleCreateCategory, handleUpdateCategory, handleRegisterResult,
+    isPrizeSettingsModalOpen, setIsPrizeSettingsModalOpen, editingCategory, setEditingCategory, resultCategory, setResultCategory,
+    alertConfig, setAlertConfig, prizeSettings, pendingWithdrawals, isProcessingWithdrawal,
+    isCreatingCategory, isUpdatingPrizeSettings, isRegisteringResult, handleApproveWithdrawal, handleRejectWithdrawal,
+    handleCreateCategory, handleUpdateCategory, handleUpdatePrizeSettings, handleRegisterResult,
   } = useAdmin();
 
   const categoryModalSubmit = editingCategory ? handleUpdateCategory : handleCreateCategory;
@@ -48,6 +49,7 @@ function AdminLayoutInner() {
       <NewCategoryModal
         isOpen={isCategoryModalOpen}
         category={editingCategory}
+        prizeSettings={prizeSettings}
         onClose={() => { setIsCategoryModalOpen(false); setEditingCategory(null); }}
         onSubmit={categoryModalSubmit}
         isSubmitting={isCreatingCategory}
@@ -58,6 +60,13 @@ function AdminLayoutInner() {
         onClose={() => setResultCategory(null)}
         onSubmit={handleRegisterResult}
         isSubmitting={isRegisteringResult}
+      />
+      <PrizeSettingsModal
+        isOpen={isPrizeSettingsModalOpen}
+        settings={prizeSettings}
+        onClose={() => setIsPrizeSettingsModalOpen(false)}
+        onSubmit={handleUpdatePrizeSettings}
+        isSubmitting={isUpdatingPrizeSettings}
       />
       <AdminFeedbackModal config={alertConfig} onClose={() => setAlertConfig(null)} />
     </div>

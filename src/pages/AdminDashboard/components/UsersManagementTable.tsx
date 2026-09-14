@@ -1,4 +1,5 @@
 import React from 'react';
+import AdminPagination from '../../../components/AdminPagination';
 import { AdminUser } from '../../../types';
 
 interface UsersManagementTableProps {
@@ -48,7 +49,7 @@ export default function UsersManagementTable({
             <button
               type="button"
               onClick={() => onSearchChange('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white text-xs cursor-pointer"
             >
               <i className="fa-solid fa-xmark"></i>
             </button>
@@ -60,10 +61,10 @@ export default function UsersManagementTable({
           <button
             type="button"
             onClick={() => onStatusFilterChange('all')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               statusFilter === 'all'
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+                : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800 cursor-pointer'
             }`}
           >
             Todos
@@ -71,7 +72,7 @@ export default function UsersManagementTable({
           <button
             type="button"
             onClick={() => onStatusFilterChange('active')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               statusFilter === 'active'
                 ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                 : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
@@ -82,7 +83,7 @@ export default function UsersManagementTable({
           <button
             type="button"
             onClick={() => onStatusFilterChange('blocked')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               statusFilter === 'blocked'
                 ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
                 : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
@@ -154,7 +155,7 @@ export default function UsersManagementTable({
                       <button
                         type="button"
                         onClick={() => onToggleUserStatus(u.id)}
-                        className={`p-1.5 rounded-lg transition text-xs ${
+                        className={`p-1.5 rounded-lg transition text-xs cursor-pointer ${
                           u.active
                             ? 'text-slate-400 hover:text-rose-400 hover:bg-rose-500/10'
                             : 'text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10'
@@ -171,48 +172,15 @@ export default function UsersManagementTable({
           </table>
         </div>
 
-        {/* Pagination Bar */}
-        <div className="p-4 border-t border-slate-800 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 bg-slate-900/40 gap-4">
-          <span>
-            Exibindo <strong className="text-white">{users.length}</strong> de{' '}
-            <strong className="text-white">{totalCount}</strong> apostadores
-          </span>
-          <div className="flex space-x-1" aria-label="Paginação de apostadores">
-            <button
-              type="button"
-              className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              onClick={() => onPageChange?.(page - 1)}
-              disabled={page <= 1}
-              aria-label="Página anterior"
-            >
-              <i className="fa-solid fa-chevron-left text-[10px]"></i>
-            </button>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
-              <button
-                key={pageNumber}
-                type="button"
-                onClick={() => onPageChange?.(pageNumber)}
-                aria-current={pageNumber === page ? 'page' : undefined}
-                className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                  pageNumber === page
-                    ? 'bg-emerald-500 text-slate-950 font-bold'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
-                }`}
-              >
-                {pageNumber}
-              </button>
-            ))}
-            <button
-              type="button"
-              className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              onClick={() => onPageChange?.(page + 1)}
-              disabled={page >= totalPages}
-              aria-label="Próxima página"
-            >
-              <i className="fa-solid fa-chevron-right text-[10px]"></i>
-            </button>
-          </div>
-        </div>
+        <AdminPagination
+          itemCount={users.length}
+          totalCount={totalCount}
+          page={page}
+          totalPages={totalPages}
+          itemLabel="apostadores"
+          ariaLabel="Paginação de apostadores"
+          onPageChange={(nextPage) => onPageChange?.(nextPage)}
+        />
       </div>
     </div>
   );

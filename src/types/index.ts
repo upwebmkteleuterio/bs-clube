@@ -151,6 +151,11 @@ export interface AdminUsersPage {
   pageSize: number;
 }
 
+export interface PrizeSettings {
+  housePercentage: number;
+  winnerPercentage: number;
+}
+
 export interface AdminCategory {
   id: number | string;
   poolId?: string;
@@ -164,7 +169,25 @@ export interface AdminCategory {
   minNumbers?: number;
   maxNumbers?: number;
   numbers?: number[];
+  housePercentage: number;
+  winnerPercentage: number;
   status: 'em_andamento' | 'concluido' | 'inativo';
+}
+
+export type AdminCategoryStatus = 'all' | 'open' | 'closed';
+
+export interface AdminCategoriesQuery {
+  page: number;
+  pageSize: number;
+  status: AdminCategoryStatus;
+}
+
+export interface AdminCategoriesPage {
+  items: AdminCategory[];
+  totalCount: number;
+  totalPages: number;
+  page: number;
+  pageSize: number;
 }
 
 export interface AdminCategoryInput {
@@ -174,6 +197,8 @@ export interface AdminCategoryInput {
   vagas: number;
   drawDate: string;
   numbersPerBet: number;
+  housePercentage: number;
+  winnerPercentage: number;
 }
 
 export interface RegisterResultInput {
@@ -181,6 +206,23 @@ export interface RegisterResultInput {
   drawId: string;
   drawDate: string;
   dezenas: number[];
+}
+
+export interface RegisterResultOutcome {
+  gross: number;
+  house: number;
+  winners: number;
+  winnerCount: number;
+  category: AdminCategory;
+}
+
+export interface PrizeAward {
+  id: string;
+  poolId: string;
+  purchasedBetId: string;
+  hits: number;
+  amount: number;
+  createdAt: string;
 }
 
 export interface AdminFinancialMetrics {

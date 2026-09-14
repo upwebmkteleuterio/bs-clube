@@ -77,7 +77,7 @@ export default function ManualDrawModal({
           type="button"
           onClick={onClose}
           disabled={isExecuting}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1"
+          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 cursor-pointer disabled:cursor-not-allowed"
           aria-label="Fechar"
         >
           <i className="fa-solid fa-xmark text-lg"></i>
@@ -134,7 +134,7 @@ export default function ManualDrawModal({
               <button
                 type="button"
                 onClick={handleSurpresinha}
-                className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center space-x-1"
+                className="text-[11px] font-bold text-amber-400 hover:text-amber-300 flex items-center space-x-1 cursor-pointer"
               >
                 <i className="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
                 <span>Gerar Aleatórias</span>
@@ -166,7 +166,7 @@ export default function ManualDrawModal({
           <button
             type="submit"
             disabled={isExecuting}
-            className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition mt-2 flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50 shadow-lg shadow-amber-900/30"
+            className="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3.5 rounded-xl text-sm transition mt-2 flex items-center justify-center space-x-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 shadow-lg shadow-amber-900/30"
           >
             {isExecuting ? (
               <>

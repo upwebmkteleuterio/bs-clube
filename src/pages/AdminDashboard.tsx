@@ -10,6 +10,7 @@ import WithdrawalAnalysisModal from './AdminDashboard/components/WithdrawalAnaly
 import NewCategoryModal from './AdminDashboard/components/NewCategoryModal';
 import RegisterResultModal from './AdminDashboard/components/RegisterResultModal';
 import AdminFeedbackModal from './AdminDashboard/components/AdminFeedbackModal';
+import PrizeSettingsModal from './AdminDashboard/components/PrizeSettingsModal';
 
 export default function AdminDashboard() {
   const state = useAdminDashboardState();
@@ -22,6 +23,8 @@ export default function AdminDashboard() {
     setWithdrawalModal,
     isCategoryModalOpen,
     setIsCategoryModalOpen,
+    isPrizeSettingsModalOpen,
+    setIsPrizeSettingsModalOpen,
     editingCategory,
     setEditingCategory,
     resultCategory,
@@ -32,6 +35,16 @@ export default function AdminDashboard() {
     setUserSearchTerm,
     userStatusFilter,
     setUserStatusFilter,
+    page: userPage,
+    totalPages: userTotalPages,
+    totalCount: userTotalCount,
+    setPage: setUserPage,
+    categoryStatusFilter,
+    setCategoryStatusFilter,
+    categoryPage,
+    categoryTotalPages,
+    categoryTotalCount,
+    setCategoryPage,
     metrics,
     isMetricsLoading,
     pendingWithdrawals,
@@ -42,12 +55,15 @@ export default function AdminDashboard() {
     isCategoriesLoading,
     isProcessingWithdrawal,
     isCreatingCategory,
+    isUpdatingPrizeSettings,
     isRegisteringResult,
+    prizeSettings,
     handleApproveWithdrawal,
     handleRejectWithdrawal,
     handleToggleUser,
     handleCreateCategory,
     handleUpdateCategory,
+    handleUpdatePrizeSettings,
     handleRegisterResult,
   } = state;
 
@@ -85,7 +101,10 @@ export default function AdminDashboard() {
             <div className="max-w-7xl mx-auto">
               <UsersManagementTable
                 users={filteredUsers}
-                totalCount={filteredUsers.length}
+                totalCount={userTotalCount}
+                page={userPage}
+                totalPages={userTotalPages}
+                onPageChange={setUserPage}
                 isLoading={isUsersLoading}
                 searchTerm={userSearchTerm}
                 onSearchChange={setUserSearchTerm}
@@ -100,11 +119,18 @@ export default function AdminDashboard() {
             <div className="max-w-7xl mx-auto">
               <CategoriesManagementTable
                 categories={categories}
+                totalCount={categoryTotalCount}
+                page={categoryPage}
+                totalPages={categoryTotalPages}
+                statusFilter={categoryStatusFilter}
+                onPageChange={setCategoryPage}
+                onStatusFilterChange={setCategoryStatusFilter}
                 isLoading={isCategoriesLoading}
                 onOpenNewCategory={() => {
                   setEditingCategory(null);
                   setIsCategoryModalOpen(true);
                 }}
+                onOpenPrizeSettings={() => setIsPrizeSettingsModalOpen(true)}
                 onEditCategory={(category) => {
                   setEditingCategory(category);
                   setIsCategoryModalOpen(true);
@@ -128,6 +154,7 @@ export default function AdminDashboard() {
       <NewCategoryModal
         isOpen={isCategoryModalOpen}
         category={editingCategory}
+        prizeSettings={prizeSettings}
         onClose={() => {
           setIsCategoryModalOpen(false);
           setEditingCategory(null);
@@ -142,6 +169,14 @@ export default function AdminDashboard() {
         onClose={() => setResultCategory(null)}
         onSubmit={handleRegisterResult}
         isSubmitting={isRegisteringResult}
+      />
+
+      <PrizeSettingsModal
+        isOpen={isPrizeSettingsModalOpen}
+        settings={prizeSettings}
+        onClose={() => setIsPrizeSettingsModalOpen(false)}
+        onSubmit={handleUpdatePrizeSettings}
+        isSubmitting={isUpdatingPrizeSettings}
       />
 
       <AdminFeedbackModal config={alertConfig} onClose={() => setAlertConfig(null)} />

@@ -15,6 +15,7 @@ export default function Resultados() {
     selectedDrawId,
     setSelectedDrawId,
     activeDraw,
+    ownPrizeAwards,
     ranking,
     searchTerm,
     setSearchTerm,
@@ -25,10 +26,24 @@ export default function Resultados() {
     openLogin,
     isLoading,
   } = useResultadosRanking();
+  const ownPrizeTotal = ownPrizeAwards.reduce((total, award) => total + award.amount, 0);
+  const ownPrizeHits = [...new Set(ownPrizeAwards.map((award) => award.hits))].sort((a, b) => a - b);
 
   return (
     <div className="min-h-screen flex flex-col pb-40 relative">
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-8">
+        {ownPrizeAwards.length > 0 && (
+          <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-amber-100" role="status" aria-live="polite">
+            <div className="flex items-start gap-3">
+              <i className="fa-solid fa-trophy text-amber-300 mt-0.5" aria-hidden="true"></i>
+              <div>
+                <p className="font-bold">Você tem um prêmio neste bolão!</p>
+                <p className="text-sm text-amber-100/80 mt-1">Valor total: R$ {ownPrizeTotal.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} · {ownPrizeAwards.length} aposta(s) premiada(s) com {ownPrizeHits.join(', ')} acerto(s).</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Sorteios Oficiais Caixa (Concursos dinâmicos com dezenas sorteadas) */}
         <section>
           <div className="flex items-center justify-between mb-4">

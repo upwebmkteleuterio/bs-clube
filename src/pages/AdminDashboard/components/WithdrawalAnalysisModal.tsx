@@ -30,7 +30,7 @@ export default function WithdrawalAnalysisModal({
           type="button"
           onClick={onClose}
           disabled={isProcessing}
-          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1"
+          className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 cursor-pointer disabled:cursor-not-allowed"
           aria-label="Fechar"
         >
           <i className="fa-solid fa-xmark text-lg"></i>
@@ -84,7 +84,7 @@ export default function WithdrawalAnalysisModal({
               type="button"
               disabled={isProcessing}
               onClick={() => onReject(withdrawal.id)}
-              className="w-full bg-slate-900 hover:bg-slate-800 text-rose-400 hover:text-rose-300 border border-slate-800 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer disabled:opacity-50"
+              className="w-full bg-slate-900 hover:bg-slate-800 text-rose-400 hover:text-rose-300 border border-slate-800 py-3 rounded-xl text-xs font-bold transition flex items-center justify-center space-x-2 cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
             >
               <i className="fa-solid fa-xmark"></i>
               <span>Rejeitar</span>
@@ -94,9 +94,9 @@ export default function WithdrawalAnalysisModal({
               type="button"
               disabled={isProcessing}
               onClick={() => onApprove(withdrawal.id)}
-              className={`w-full font-black py-3 rounded-xl text-xs transition flex items-center justify-center space-x-2 cursor-pointer ${
+              className={`w-full font-black py-3 rounded-xl text-xs transition flex items-center justify-center space-x-2 cursor-pointer disabled:cursor-not-allowed ${
                 isProcessing
-                  ? 'bg-slate-800 text-emerald-400 cursor-wait'
+                  ? 'bg-slate-800 text-emerald-400'
                   : 'bg-gradient-to-r from-emerald-500 to-brand-accent hover:from-emerald-400 hover:to-emerald-500 text-slate-950 shadow-lg shadow-emerald-900/40'
               }`}
             >

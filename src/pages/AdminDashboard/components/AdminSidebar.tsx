@@ -32,7 +32,7 @@ export default function AdminSidebar({
       >
         {/* Brand Header */}
         <div className={`h-20 flex items-center px-6 border-b border-slate-800 justify-between ${isCollapsed ? 'md:px-3 md:justify-center' : ''}`}>
-          <Link to="/" className="flex items-center space-x-2.5" aria-label="BS CLUBE Painel Admin">
+          <Link to="/" className="flex items-center space-x-2.5 cursor-pointer" aria-label="BS CLUBE Painel Admin">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-600 to-brand-accent flex items-center justify-center text-white font-bold shadow-md shadow-emerald-900/50">
               <i className="fa-solid fa-clover text-base"></i>
             </div>
@@ -47,7 +47,7 @@ export default function AdminSidebar({
           </Link>
           <button
             type="button"
-            className="md:hidden text-slate-400 hover:text-white p-1"
+            className="md:hidden text-slate-400 hover:text-white p-1 cursor-pointer"
             onClick={onClose}
             aria-label="Fechar menu"
           >
@@ -125,7 +125,7 @@ export default function AdminSidebar({
 
           <Link
             to="/"
-            className={`flex items-center px-6 py-3 ${isCollapsed ? 'md:px-0 md:justify-center' : ''} text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition`}
+            className={`flex items-center px-6 py-3 ${isCollapsed ? 'md:px-0 md:justify-center' : ''} text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition cursor-pointer`}
             title={isCollapsed ? 'Ir para o App' : undefined}
           >
             <i className="fa-solid fa-arrow-left w-5 text-left"></i>
@@ -141,10 +141,6 @@ export default function AdminSidebar({
             </div>
             <div className={`text-left flex-1 min-w-0 ${isCollapsed ? 'md:hidden' : ''}`}>
               <p className="text-sm font-bold text-white truncate">Super Admin</p>
-              <div className="flex items-center space-x-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                <p className="text-[11px] text-emerald-400 font-medium">Online</p>
-              </div>
             </div>
           </div>
         </div>

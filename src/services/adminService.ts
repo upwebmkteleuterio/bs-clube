@@ -7,12 +7,18 @@ import {
   AdminUsersPage,
   AdminUsersQuery,
   AdminCategoryInput,
+  AdminCategoriesPage,
+  AdminCategoriesQuery,
   ManualDrawInput,
+  PrizeSettings,
   RegisterResultInput,
+  RegisterResultOutcome,
 } from '../types';
 
 type Row = Record<string, any>;
+const DEFAULT_PRIZE_SETTINGS: PrizeSettings = { housePercentage: 25, winnerPercentage: 75 };
 const ADMIN_USERS_PAGE_SIZE = 10;
+const ADMIN_CATEGORIES_PAGE_SIZE = 10;
 
 function mapWithdrawal(row: Row): AdminWithdrawal {
   return {
@@ -91,11 +97,27 @@ function mapCategory(row: Row): AdminCategory {
     minNumbers: Number(pool.min_numbers ?? 6),
     maxNumbers: Number(pool.max_numbers ?? 6),
     numbers: Array.isArray(draw?.numbers) ? draw.numbers.map(Number) : [],
-    status: row.status === 'inactive' ? 'inativo' : pool.status === 'completed' ? 'concluido' : 'em_andamento',
+    housePercentage: Number(pool.house_percentage ?? DEFAULT_PRIZE_SETTINGS.housePercentage),
+    winnerPercentage: Number(pool.winner_percentage ?? DEFAULT_PRIZE_SETTINGS.winnerPercentage),
+    status: row.status === 'inactive' ? 'inativo' : pool.status === 'closed' || pool.status === 'completed' ? 'concluido' : 'em_andamento',
   };
 }
 
-const categorySelect = '*, pools(*, draws(id, contest, draw_date, numbers))';
+function validatePrizeSettings(settings: PrizeSettings) {
+  if (
+    !Number.isFinite(settings.housePercentage) ||
+    !Number.isFinite(settings.winnerPercentage) ||
+    settings.housePercentage < 0 ||
+    settings.housePercentage > 100 ||
+    settings.winnerPercentage < 0 ||
+    settings.winnerPercentage > 100 ||
+    Number((settings.housePercentage + settings.winnerPercentage).toFixed(2)) !== 100
+  ) {
+    throw new Error('Os percentuais devem estar entre 0 e 100 e somar 100%.');
+  }
+}
+
+const categorySelect = '*, pools!inner(*, draws(id, contest, draw_date, numbers))';
 
 async function readCategory(id: number | string): Promise<AdminCategory> {
   const { data, error } = await supabase.from('pool_categories').select(categorySelect).eq('id', String(id)).single();
@@ -138,6 +160,10 @@ function validateCategoryInput(data: AdminCategoryInput) {
   ) {
     throw new Error('A quantidade de dezenas por aposta deve estar entre 6 e 20.');
   }
+  validatePrizeSettings({
+    housePercentage: data.housePercentage,
+    winnerPercentage: data.winnerPercentage,
+  });
 }
 
 function validateOfficialNumbers(numbers: number[]) {
@@ -161,6 +187,41 @@ async function requireAdmin() {
 }
 
 export const adminService = {
+  async getPrizeSettings(): Promise<PrizeSettings> {
+    await requireAdmin();
+    const { data, error } = await supabase
+      .from('app_settings')
+      .select('house_percentage, winner_percentage')
+      .eq('id', 'global')
+      .single();
+    if (error) throw error;
+    const settings = {
+      housePercentage: Number(data.house_percentage),
+      winnerPercentage: Number(data.winner_percentage),
+    };
+    validatePrizeSettings(settings);
+    return settings;
+  },
+
+  async updatePrizeSettings(settings: PrizeSettings): Promise<PrizeSettings> {
+    await requireAdmin();
+    validatePrizeSettings(settings);
+    const { data, error } = await supabase
+      .from('app_settings')
+      .update({
+        house_percentage: settings.housePercentage,
+        winner_percentage: settings.winnerPercentage,
+      })
+      .eq('id', 'global')
+      .select('house_percentage, winner_percentage')
+      .single();
+    if (error) throw error;
+    return {
+      housePercentage: Number(data.house_percentage),
+      winnerPercentage: Number(data.winner_percentage),
+    };
+  },
+
   async getMetrics(): Promise<AdminFinancialMetrics> {
     await requireAdmin();
     const adminIds = await getAdminUserIds();
@@ -271,11 +332,31 @@ export const adminService = {
     return mapUser({ ...data, ...(wallets.get(String(id)) ?? {}) });
   },
 
-  async getCategories(): Promise<AdminCategory[]> {
+  async getCategories({ page, pageSize, status }: AdminCategoriesQuery): Promise<AdminCategoriesPage> {
     await requireAdmin();
-    const { data, error } = await supabase.from('pool_categories').select(categorySelect).order('created_at', { ascending: false });
+    const safePageSize = Math.max(1, Math.min(pageSize || ADMIN_CATEGORIES_PAGE_SIZE, 50));
+    const safePage = Math.max(1, page);
+    const from = (safePage - 1) * safePageSize;
+    const to = from + safePageSize - 1;
+    let categoriesQuery = supabase
+      .from('pool_categories')
+      .select(categorySelect, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (status === 'open') categoriesQuery = categoriesQuery.in('pools.status', ['open', 'late_registration']);
+    if (status === 'closed') categoriesQuery = categoriesQuery.in('pools.status', ['closed', 'completed']);
+
+    const { data, count, error } = await categoriesQuery;
     if (error) throw error;
-    return (data ?? []).map(mapCategory);
+    const totalCount = count ?? 0;
+    return {
+      items: (data ?? []).map(mapCategory),
+      totalCount,
+      totalPages: Math.max(1, Math.ceil(totalCount / safePageSize)),
+      page: safePage,
+      pageSize: safePageSize,
+    };
   },
 
   async createCategory(data: AdminCategoryInput): Promise<AdminCategory> {
@@ -309,6 +390,8 @@ export const adminService = {
       min_numbers: data.numbersPerBet,
       max_numbers: data.numbersPerBet,
       total_lottery_numbers: 60,
+      house_percentage: data.housePercentage,
+      winner_percentage: data.winnerPercentage,
     });
     if (poolError) throw poolError;
     return readCategory(category.id);
@@ -339,6 +422,8 @@ export const adminService = {
         total_slots: data.vagas,
         min_numbers: data.numbersPerBet,
         max_numbers: data.numbersPerBet,
+        house_percentage: data.housePercentage,
+        winner_percentage: data.winnerPercentage,
       })
       .eq('id', pool.id);
     if (poolError) throw poolError;
@@ -350,36 +435,35 @@ export const adminService = {
     return readCategory(id);
   },
 
-  async registerOfficialResult(input: RegisterResultInput): Promise<AdminCategory> {
+  async registerOfficialResult(input: RegisterResultInput): Promise<RegisterResultOutcome> {
     await requireAdmin();
     if (!input.poolId || !input.drawId) throw new Error('Bolão inválido para registrar o resultado.');
     if (typeof input.drawDate !== 'string' || !isValidIsoDate(toIsoDate(input.drawDate))) {
       throw new Error('Informe uma data de sorteio válida.');
     }
     validateOfficialNumbers(input.dezenas);
-    const { data: pool, error: poolLookupError } = await supabase
-      .from('pools')
-      .select('draw_id')
-      .eq('id', input.poolId)
-      .single();
-    if (poolLookupError) throw poolLookupError;
-    if (String(pool.draw_id) !== String(input.drawId)) {
-      throw new Error('O resultado não corresponde ao sorteio deste bolão.');
-    }
-    const { error: drawError } = await supabase
-      .from('draws')
-      .update({ numbers: input.dezenas, draw_date: toIsoDate(input.drawDate), is_published: true })
-      .eq('id', input.drawId);
-    if (drawError) throw drawError;
-    const { error: poolError } = await supabase.from('pools').update({ status: 'completed' }).eq('id', input.poolId);
-    if (poolError) throw poolError;
-    const { data: poolCategory, error: categoryError } = await supabase
+    const { data, error } = await supabase.rpc('register_pool_result', {
+      p_pool_id: input.poolId,
+      p_draw_id: input.drawId,
+      p_draw_date: toIsoDate(input.drawDate),
+      p_numbers: input.dezenas,
+    });
+    if (error) throw error;
+    const outcome = (data ?? {}) as Row;
+    const { data: pool, error: poolError } = await supabase
       .from('pools')
       .select('category_id')
       .eq('id', input.poolId)
       .single();
-    if (categoryError) throw categoryError;
-    return readCategory(poolCategory.category_id);
+    if (poolError) throw poolError;
+    const category = await readCategory(pool.category_id);
+    return {
+      gross: Number(outcome.gross_amount ?? 0),
+      house: Number(outcome.house_amount ?? 0),
+      winners: Number(outcome.winners_amount ?? 0),
+      winnerCount: Number(outcome.winner_count ?? 0),
+      category,
+    };
   },
 
   async executeManualDraw(input: ManualDrawInput): Promise<{ message: string; drawnNumbers: number[] }> {
