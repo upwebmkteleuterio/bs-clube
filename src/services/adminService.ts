@@ -6,6 +6,7 @@ import {
   AdminFinancialMetrics,
   AdminUsersPage,
   AdminUsersQuery,
+  AdminCategoryInput,
   ManualDrawInput,
 } from '../types';
 
@@ -59,6 +60,17 @@ async function getWallets(userIds: string[]) {
 function toIsoDate(value: string) {
   const parts = value.split('/');
   return parts.length === 3 ? `${parts[2]}-${parts[1]}-${parts[0]}` : value;
+}
+
+function isValidIsoDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [year, month, day] = value.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day));
+  return (
+    date.getUTCFullYear() === year &&
+    date.getUTCMonth() === month - 1 &&
+    date.getUTCDate() === day
+  );
 }
 
 function mapCategory(row: Row): AdminCategory {
@@ -203,14 +215,43 @@ export const adminService = {
     return (data ?? []).map(mapCategory);
   },
 
-  async createCategory(data: { name: string; cota: number; vagas: number; drawDate: string }): Promise<AdminCategory> {
+  async createCategory(data: AdminCategoryInput): Promise<AdminCategory> {
     await requireAdmin();
-    const slug = data.name.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
-    const { data: category, error: categoryError } = await supabase.from('pool_categories').insert({ name: data.name.trim(), slug, status: 'active' }).select('*').single();
+    if (typeof data.name !== 'string' || !data.name.trim()) {
+      throw new Error('Informe o nome do bolão.');
+    }
+    if (
+      typeof data.concurso !== 'string' ||
+      !/^\d+$/.test(data.concurso.trim()) ||
+      !Number.isSafeInteger(Number(data.concurso)) ||
+      Number(data.concurso) <= 0
+    ) {
+      throw new Error('Informe um número de concurso válido.');
+    }
+    if (
+      typeof data.cota !== 'number' ||
+      !Number.isFinite(data.cota) ||
+      data.cota <= 0 ||
+      Number(data.cota.toFixed(2)) !== data.cota ||
+      data.cota > 9999999999.99
+    ) {
+      throw new Error('Informe um valor de cota válido.');
+    }
+    if (typeof data.vagas !== 'number' || !Number.isSafeInteger(data.vagas) || data.vagas <= 0) {
+      throw new Error('Informe a quantidade de vagas.');
+    }
+    if (typeof data.drawDate !== 'string' || !isValidIsoDate(toIsoDate(data.drawDate))) {
+      throw new Error('Informe uma data de sorteio válida.');
+    }
+
+    const name = data.name.trim();
+    const drawDate = toIsoDate(data.drawDate);
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    const { data: category, error: categoryError } = await supabase.from('pool_categories').insert({ name, slug, status: 'active' }).select('*').single();
     if (categoryError) throw categoryError;
     const { data: draw, error: drawError } = await supabase.from('draws').insert({
-      contest: data.name.trim(),
-      draw_date: toIsoDate(data.drawDate),
+      contest: data.concurso.trim(),
+      draw_date: drawDate,
       location: 'Caixa Econômica Federal',
       numbers: [],
       is_published: false,
@@ -219,7 +260,7 @@ export const adminService = {
     const { error: poolError } = await supabase.from('pools').insert({
       category_id: category.id,
       draw_id: draw.id,
-      name: data.name.trim(),
+      name,
       buy_in: data.cota,
       prize_estimate: 0,
       speed: 'normal',

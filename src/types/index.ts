@@ -158,6 +158,14 @@ export interface AdminCategory {
   status: 'em_andamento' | 'concluido' | 'inativo';
 }
 
+export interface AdminCategoryInput {
+  name: string;
+  concurso: string;
+  cota: number;
+  vagas: number;
+  drawDate: string;
+}
+
 export interface AdminFinancialMetrics {
   totalArrecadado: number;
   lucroRetido: number;

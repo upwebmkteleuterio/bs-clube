@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService } from '../services/adminService';
-import { AdminUserStatus, ManualDrawInput } from '../types';
+import { AdminCategoryInput, AdminUserStatus, ManualDrawInput } from '../types';
 
 export const ADMIN_METRICS_KEY = ['admin', 'metrics'];
 export const ADMIN_WITHDRAWALS_KEY = ['admin', 'withdrawals'];
@@ -93,12 +93,7 @@ export function useAdminCategories() {
 export function useCreateCategory() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: {
-      name: string;
-      cota: number;
-      vagas: number;
-      drawDate: string;
-    }) => adminService.createCategory(data),
+    mutationFn: (data: AdminCategoryInput) => adminService.createCategory(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_CATEGORIES_KEY });
       queryClient.invalidateQueries({ queryKey: ['games'] });

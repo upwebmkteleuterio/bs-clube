@@ -10,7 +10,7 @@ import {
   useCreateCategory,
   useExecuteManualDraw,
 } from '../../../hooks/useAdmin';
-import { AdminWithdrawal, ManualDrawInput } from '../../../types';
+import { AdminCategoryInput, AdminWithdrawal, ManualDrawInput } from '../../../types';
 
 export function useAdminDashboardState() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -115,12 +115,7 @@ export function useAdminDashboardState() {
     }
   };
 
-  const handleCreateCategory = async (data: {
-    name: string;
-    cota: number;
-    vagas: number;
-    drawDate: string;
-  }) => {
+  const handleCreateCategory = async (data: AdminCategoryInput) => {
     try {
       await createCategoryMutation.mutateAsync(data);
       setIsCategoryModalOpen(false);

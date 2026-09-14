@@ -7,7 +7,6 @@ import WithdrawalAnalysisModal from '../pages/AdminDashboard/components/Withdraw
 import NewCategoryModal from '../pages/AdminDashboard/components/NewCategoryModal';
 import ManualDrawModal from '../pages/AdminDashboard/components/ManualDrawModal';
 import AdminFeedbackModal from '../pages/AdminDashboard/components/AdminFeedbackModal';
-import PrototypeMenu from '../components/PrototypeMenu';
 
 function AdminLayoutInner() {
   const {
@@ -86,8 +85,6 @@ function AdminLayoutInner() {
         config={alertConfig}
         onClose={() => setAlertConfig(null)}
       />
-
-      <PrototypeMenu />
     </div>
   );
 }
