@@ -8,6 +8,7 @@ interface NumberGridProps {
   onClearCurrentSelection: () => void;
   onAddCurrentGame: () => void;
   totalBalls?: number;
+  requiredNumbers?: number;
 }
 
 export default function NumberGrid({
@@ -18,8 +19,9 @@ export default function NumberGrid({
   onClearCurrentSelection,
   onAddCurrentGame,
   totalBalls = 60,
+  requiredNumbers = 6,
 }: NumberGridProps) {
-  const isCardComplete = selectedNumbers.length === 6;
+  const isCardComplete = selectedNumbers.length === requiredNumbers;
 
   return (
     <div>
@@ -28,7 +30,7 @@ export default function NumberGrid({
           <h3 className="font-heading text-lg font-black text-white uppercase tracking-wide flex items-center">
             Monte seu Jogo
             <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded ml-2 normal-case font-medium">
-              6 Dezenas (1 a {totalBalls})
+              {requiredNumbers} Dezenas (1 a {totalBalls})
             </span>
           </h3>
           <p className="text-xs text-slate-400 mt-0.5">
@@ -109,7 +111,7 @@ export default function NumberGrid({
           <div className="flex items-center space-x-2">
             <span className="text-xs text-slate-400">Cartela atual:</span>
             <div className="flex space-x-1.5">
-              {Array.from({ length: 6 }, (_, i) => {
+              {Array.from({ length: requiredNumbers }, (_, i) => {
                 const num = selectedNumbers[i];
                 return num ? (
                   <div

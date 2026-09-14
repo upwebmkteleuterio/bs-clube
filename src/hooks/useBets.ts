@@ -12,6 +12,7 @@ export function useBolaoDetails(id?: string) {
   return useQuery({
     queryKey: [...BOLAO_DETAILS_KEY, id || 'default'],
     queryFn: () => betsService.getBolaoDetails(id),
+    enabled: Boolean(id),
     staleTime: 1000 * 60 * 5,
   });
 }

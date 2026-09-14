@@ -27,7 +27,7 @@ export default function HomeLogada() {
             </div>
             <div>
               <h3 className="font-heading text-2xl font-black text-white">Bolões Disponíveis</h3>
-              <p className="text-xs text-slate-400">Lobby de Salas estilo Sit & Go • Escolha o seu e participe</p>
+              <p className="text-xs text-slate-400">Escolha o seu e participe</p>
             </div>
           </div>
           <GameFilters

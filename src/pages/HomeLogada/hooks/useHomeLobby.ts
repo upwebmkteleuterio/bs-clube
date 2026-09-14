@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
-import { useAppStore } from '../../../store/useAppStore';
+import { useUserBets } from '../../../hooks/useBets';
 import { useGames } from '../../../hooks/useGames';
 
 export type FilterCategory = 'todos' | 'meus' | 'cota10' | 'cota20' | 'cota50';
@@ -9,8 +9,12 @@ export type FilterCategory = 'todos' | 'meus' | 'cota10' | 'cota20' | 'cota50';
 export function useHomeLobby() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const { subscribedGames } = useAppStore();
   const { data: games = [], isLoading, isError, refetch } = useGames();
+  const { data: userBets = [] } = useUserBets();
+  const subscribedGames = useMemo(
+    () => [...new Set(userBets.map((bet) => bet.bolaoId))],
+    [userBets],
+  );
   const [filterState, setFilterState] = useState<FilterCategory>('todos');
 
   const filteredGames = useMemo(() => {
@@ -21,8 +25,8 @@ export function useHomeLobby() {
     return games;
   }, [games, filterState, subscribedGames]);
 
-  const handlePlayAction = () => {
-    navigate(session ? '/selecao-dezenas' : '/login', { state: { from: '/selecao-dezenas' } });
+  const handlePlayAction = (gameId?: string) => {
+    navigate('/selecao-dezenas', { state: { from: '/selecao-dezenas', bolaoId: gameId } });
   };
 
   return {
