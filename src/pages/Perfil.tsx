@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile, useUpdateProfile } from '../hooks/useProfile';
-import { useWalletBalance, useWalletTransactions } from '../hooks/useWallet';
+import { useWalletBalance } from '../hooks/useWallet';
 import { PixKeyType } from '../types';
 
 function normalizePhone(value: string) {
@@ -31,15 +31,14 @@ export default function Perfil() {
   const { data: profile, isLoading: isProfileLoading } = useProfile();
   const updateProfile = useUpdateProfile();
   const { data: balance } = useWalletBalance();
-  const { data: transactionPage } = useWalletTransactions({ pageSize: 3 });
-  const transactions = transactionPage?.items ?? [];
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [pixKeyType, setPixKeyType] = useState<PixKeyType | ''>('');
   const [pixKey, setPixKey] = useState('');
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const balanceTotal = balance?.total ?? 0;
+  const [pixMessage, setPixMessage] = useState<string | null>(null);
+  const [pixError, setPixError] = useState<string | null>(null);
   const balanceWithdrawable = balance?.withdrawable ?? 0;
   const displayName = profile?.fullName || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Apostador';
   const safeAvatarUrl = profile?.avatarUrl && /^https?:\/\//i.test(profile.avatarUrl) ? profile.avatarUrl : null;
@@ -61,47 +60,39 @@ export default function Perfil() {
     setProfileMessage(null);
     setProfileError(null);
     try {
-      await updateProfile.mutateAsync({
-        fullName,
-        phone,
-        avatarUrl: profile?.avatarUrl ?? null,
-        pixKeyType: pixKeyType || null,
-        pixKey: pixKey || null,
-      });
+      await updateProfile.mutateAsync({ fullName, phone, avatarUrl: profile?.avatarUrl ?? null });
       setProfileMessage('Dados do perfil atualizados.');
     } catch (error) {
       setProfileError(error instanceof Error ? error.message : 'Não foi possível atualizar o perfil.');
     }
   };
 
+  const handleSavePix = async () => {
+    setPixMessage(null);
+    setPixError(null);
+    try {
+      await updateProfile.mutateAsync({
+        fullName: profile?.fullName ?? fullName,
+        phone: profile?.phone ?? phone,
+        avatarUrl: profile?.avatarUrl ?? null,
+        pixKeyType: pixKeyType || null,
+        pixKey: pixKey || null,
+      });
+      setPixMessage('Chave Pix atualizada.');
+    } catch (error) {
+      setPixError(error instanceof Error ? error.message : 'Não foi possível atualizar a chave Pix.');
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-32 space-y-6">
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-        <div>
-          <h2 className="font-heading text-2xl font-black text-white flex items-center gap-2">
-            <i className="fa-solid fa-user-circle text-emerald-400" />
-            <span>Meu Perfil</span>
-          </h2>
-          <p className="text-xs text-slate-400">Gerenciamento de conta, Pix e preferências</p>
-        </div>
-        <button onClick={() => navigate('/carteira')} className="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 px-3 py-1.5 rounded-full text-xs font-semibold text-slate-300 flex items-center space-x-2 transition">
-          <i className="fa-solid fa-wallet text-emerald-400" />
-          <span>R$ {balanceTotal.toFixed(2).replace('.', ',')}</span>
-        </button>
-      </div>
-
       <div className="glass-card rounded-2xl p-6 border border-slate-800 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6">
         <div className="flex items-center space-x-4">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-black text-2xl shadow-lg shadow-emerald-900/40 overflow-hidden">
             {safeAvatarUrl ? <img src={safeAvatarUrl} alt="Avatar do perfil" className="h-full w-full object-cover" /> : displayName.substring(0, 2).toUpperCase()}
           </div>
           <div>
-            <div className="flex items-center space-x-2">
-              <h3 className="font-heading text-xl font-bold text-white">{displayName}</h3>
-              <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full border bg-emerald-500/10 text-emerald-400 border-emerald-500/30">
-                Conta autenticada
-              </span>
-            </div>
+            <h3 className="font-heading text-xl font-bold text-white">{displayName}</h3>
             <p className="text-xs text-slate-400 mt-1">{user?.email}</p>
           </div>
         </div>
@@ -121,9 +112,9 @@ export default function Perfil() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
           <h4 className="text-sm font-bold text-white flex items-center gap-2"><i className="fa-solid fa-id-card text-emerald-400" /><span>Dados da Conta</span></h4>
-          <div className="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
-            <span className="text-[10px] text-slate-500 block uppercase">E-mail</span>
-            <span className="text-sm font-semibold text-white break-all">{user?.email}</span>
+          <div>
+            <label htmlFor="profile-email" className="text-[10px] text-slate-500 block uppercase mb-1">E-mail</label>
+            <input id="profile-email" value={user?.email ?? ''} readOnly disabled className="w-full cursor-not-allowed bg-slate-900 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-slate-500 outline-none opacity-80" />
           </div>
           <div>
             <label htmlFor="profile-full-name" className="text-[10px] text-slate-500 block uppercase mb-1">Nome completo</label>
@@ -131,7 +122,7 @@ export default function Perfil() {
           </div>
           <div>
             <label htmlFor="profile-cpf" className="text-[10px] text-slate-500 block uppercase mb-1">CPF</label>
-            <input id="profile-cpf" value={formatCpf(profile?.cpf ?? '')} readOnly disabled={isProfileLoading} className="w-full cursor-not-allowed bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-slate-400 outline-none disabled:opacity-60" />
+            <input id="profile-cpf" value={formatCpf(profile?.cpf ?? '')} readOnly disabled className="w-full cursor-not-allowed bg-slate-900 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-slate-500 outline-none opacity-80" />
           </div>
           <div>
             <label htmlFor="profile-phone" className="text-[10px] text-slate-500 block uppercase mb-1">Telefone</label>
@@ -154,7 +145,7 @@ export default function Perfil() {
           <h4 className="text-sm font-bold text-white flex items-center gap-2"><i className="fa-brands fa-pix text-brand-pix" /><span>Chave Pix para Resgates</span></h4>
           <div>
             <label htmlFor="profile-pix-key-type" className="text-[10px] text-slate-500 block uppercase mb-1">Tipo da chave</label>
-            <select id="profile-pix-key-type" value={pixKeyType} onChange={(event) => setPixKeyType(event.target.value as PixKeyType | '')} disabled={isProfileLoading} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60">
+            <select id="profile-pix-key-type" value={pixKeyType} onChange={(event) => setPixKeyType(event.target.value as PixKeyType | '')} disabled={isProfileLoading || updateProfile.isPending} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60">
               <option value="">Selecione</option>
               <option value="cpf">CPF</option>
               <option value="email">E-mail</option>
@@ -164,30 +155,15 @@ export default function Perfil() {
           </div>
           <div>
             <label htmlFor="profile-pix-key" className="text-[10px] text-slate-500 block uppercase mb-1">Chave Pix</label>
-            <input id="profile-pix-key" value={pixKey} onChange={(event) => setPixKey(event.target.value)} maxLength={200} disabled={isProfileLoading} placeholder="Informe sua chave Pix" className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
+            <input id="profile-pix-key" value={pixKey} onChange={(event) => setPixKey(event.target.value)} maxLength={200} disabled={isProfileLoading || updateProfile.isPending} placeholder="Informe sua chave Pix" className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
           </div>
-        </div>
-      </div>
-
-      <div className="glass-card rounded-2xl p-6 border border-slate-800">
-        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-sm font-bold text-white flex items-center gap-2"><i className="fa-solid fa-clock-rotate-left text-slate-400" /><span>Atividades Recentes</span></h4>
-          <button onClick={() => navigate('/carteira')} className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold">Ver Extrato Completo</button>
-        </div>
-        <div className="space-y-2">
-          {transactions.slice(0, 3).map((tx) => (
-            <div key={tx.id} className="flex items-center justify-between p-3 bg-slate-950 rounded-xl border border-slate-800/60">
-              <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs ${tx.type === 'prize' ? 'bg-amber-500/10 text-brand-gold' : tx.type === 'deposit' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
-                  <i className={`fa-solid ${tx.type === 'prize' ? 'fa-trophy' : tx.type === 'deposit' ? 'fa-arrow-down' : 'fa-ticket'}`} />
-                </div>
-                <div><p className="text-xs font-semibold text-white">{tx.title}</p><p className="text-[10px] text-slate-500">{tx.date}</p></div>
-              </div>
-              <span className={`text-xs font-bold font-mono ${tx.value > 0 ? 'text-emerald-400' : 'text-slate-300'}`}>
-                {tx.value > 0 ? `+ R$ ${tx.value.toFixed(2).replace('.', ',')}` : `- R$ ${Math.abs(tx.value).toFixed(2).replace('.', ',')}`}
-              </span>
-            </div>
-          ))}
+          <div className="flex flex-col gap-2">
+            {pixError && <p className="text-xs text-rose-300" role="alert">{pixError}</p>}
+            {pixMessage && <p className="text-xs text-emerald-300" role="status">{pixMessage}</p>}
+            <button type="button" onClick={handleSavePix} disabled={isProfileLoading || updateProfile.isPending} className="w-full rounded-xl bg-emerald-500 py-2.5 text-xs font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60">
+              {updateProfile.isPending ? 'Salvando...' : 'Salvar chave Pix'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

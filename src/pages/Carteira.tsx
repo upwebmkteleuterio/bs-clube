@@ -15,6 +15,8 @@ export default function Carteira() {
     transactionTotalCount,
     transactionPage,
     transactionPageSize,
+    transactionFilter,
+    setTransactionFilter,
     setTransactionPage,
     isBalanceVisible,
     setIsBalanceVisible,
@@ -36,10 +38,10 @@ export default function Carteira() {
     withdrawKey,
     setWithdrawKey,
     pixTimer,
+    pixCode,
     handleDepositInput,
     addDepositQuick,
     generatePixPayment,
-    createPaymentIntent,
     setWithdrawMax,
     processWithdraw,
     openTransactionReceipt,
@@ -72,6 +74,8 @@ export default function Carteira() {
             page={transactionPage}
             pageSize={transactionPageSize}
             onPageChange={setTransactionPage}
+            filter={transactionFilter}
+            onFilterChange={setTransactionFilter}
             isLoading={isTransactionsLoading}
             onSelectTransaction={openTransactionReceipt}
           />
@@ -93,7 +97,7 @@ export default function Carteira() {
         onClose={() => setIsPixSheetOpen(false)}
         depositAmount={depositAmount}
         pixTimer={pixTimer}
-        onCreatePaymentIntent={createPaymentIntent}
+        pixCode={pixCode}
       />
 
       <WithdrawModal

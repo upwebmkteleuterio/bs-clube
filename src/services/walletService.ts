@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { UserTransaction, WalletActivityPage, WalletBalance } from '../types';
+import { UserTransaction, WalletActivityPage, WalletBalance, WalletTransactionFilter } from '../types';
 
 type Row = Record<string, any>;
 type WalletActivityRpcRow = {
@@ -98,13 +98,14 @@ export const walletService = {
     return mapBalance(data);
   },
 
-  async getPage(page: number, pageSize: number): Promise<WalletActivityPage> {
+  async getPage(page: number, pageSize: number, type: WalletTransactionFilter = 'all'): Promise<WalletActivityPage> {
     await currentUser();
     const safePage = Math.max(1, Math.floor(page));
     const safePageSize = Math.min(50, Math.max(1, Math.floor(pageSize)));
     const { data, error } = await supabase.rpc('get_wallet_activity', {
       p_page: safePage,
       p_page_size: safePageSize,
+      p_type: type,
     });
     if (error) throw error;
 
@@ -130,7 +131,7 @@ export const walletService = {
     return withdrawal ? mapWithdrawal(withdrawal) : null;
   },
 
-  async createDeposit(amount: number): Promise<{ balance: WalletBalance; transaction: UserTransaction }> {
+  async createDeposit(amount: number): Promise<{ balance: WalletBalance; transaction: UserTransaction; pixCode?: string }> {
     await currentUser();
     if (!Number.isFinite(amount) || amount <= 0) throw new Error('Informe um valor de depósito válido.');
     const { data, error } = await supabase.rpc('create_payment_intent', {
@@ -138,8 +139,11 @@ export const walletService = {
       p_kind: 'deposit',
     });
     if (error) throw error;
-    const transaction = mapPayment(rpcRow(data));
-    return { balance: await this.getBalance(), transaction: { ...transaction, status: 'pending' } };
+    const row = rpcRow(data);
+    const pixCodeValue = row.pix_code ?? row.qr_code ?? row.qrCode;
+    const pixCode = typeof pixCodeValue === 'string' && pixCodeValue.trim() ? pixCodeValue : undefined;
+    const transaction = mapPayment(row);
+    return { balance: await this.getBalance(), transaction: { ...transaction, status: 'pending' }, pixCode };
   },
 
   async createWithdrawal(amount: number, pixKeyType: string, pixKey: string): Promise<{ balance: WalletBalance; transaction: UserTransaction }> {

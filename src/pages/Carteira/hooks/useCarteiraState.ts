@@ -5,17 +5,18 @@ import {
   useDeposit,
   useWithdrawal,
 } from '../../../hooks/useWallet';
-import { UserTransaction } from '../../../types';
+import { UserTransaction, WalletTransactionFilter } from '../../../types';
 
 export function useCarteiraState() {
   const { data: balance, isLoading: isBalanceLoading } = useWalletBalance();
+  const [transactionFilter, setTransactionFilter] = useState<WalletTransactionFilter>('all');
   const {
     data: transactionPage,
     isLoading: isTransactionsLoading,
     page: transactionPageNumber,
     pageSize: transactionPageSize,
     setPage: setTransactionPage,
-  } = useWalletTransactions({ pageSize: 10 });
+  } = useWalletTransactions({ pageSize: 10, filter: transactionFilter });
   const transactions = transactionPage?.items ?? [];
   const depositMutation = useDeposit();
   const withdrawMutation = useWithdrawal();
@@ -33,6 +34,7 @@ export function useCarteiraState() {
   const [withdrawKey, setWithdrawKey] = useState('');
 
   const [pixTimer, setPixTimer] = useState(15 * 60);
+  const [pixCode, setPixCode] = useState<string | undefined>();
   const pixIntervalRef = useRef<any>(null);
 
 
@@ -50,11 +52,19 @@ export function useCarteiraState() {
     if (val >= 5 && val <= 5000) {
       setIsDepositModalOpen(false);
       setIsPixSheetOpen(true);
+      setPixCode(undefined);
       setPixTimer(15 * 60);
       clearInterval(pixIntervalRef.current);
       pixIntervalRef.current = setInterval(() => {
         setPixTimer((prev) => prev - 1);
       }, 1000);
+      depositMutation.mutate(val, {
+        onSuccess: (result) => setPixCode(result.pixCode),
+        onError: () => {
+          setIsPixSheetOpen(false);
+          clearInterval(pixIntervalRef.current);
+        },
+      });
     }
   };
 
@@ -65,19 +75,6 @@ export function useCarteiraState() {
     return () => clearInterval(pixIntervalRef.current);
   }, [pixTimer]);
 
-  const createPaymentIntent = () => {
-    clearInterval(pixIntervalRef.current);
-    const val = parseFloat(depositAmount);
-    if (!isNaN(val) && val > 0) {
-      depositMutation.mutate(val, {
-        onSuccess: (result) => {
-          setIsPixSheetOpen(false);
-          setReceiptTx(result.transaction);
-          setTimeout(() => setIsReceiptSheetOpen(true), 350);
-        },
-      });
-    }
-  };
 
   const setWithdrawMax = () => {
     if (balance) {
@@ -121,6 +118,8 @@ export function useCarteiraState() {
     transactionTotalCount: transactionPage?.totalCount ?? 0,
     transactionPage: transactionPageNumber,
     transactionPageSize,
+    transactionFilter,
+    setTransactionFilter,
     setTransactionPage,
     isBalanceVisible,
     setIsBalanceVisible,
@@ -142,10 +141,10 @@ export function useCarteiraState() {
     withdrawKey,
     setWithdrawKey,
     pixTimer,
+    pixCode,
     handleDepositInput,
     addDepositQuick,
     generatePixPayment,
-    createPaymentIntent,
     setWithdrawMax,
     processWithdraw,
     openTransactionReceipt,

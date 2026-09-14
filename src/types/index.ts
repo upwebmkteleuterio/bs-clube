@@ -94,7 +94,15 @@ export interface UserProfile {
   updatedAt: string;
 }
 
-export type ProfileUpdate = Pick<UserProfile, 'fullName' | 'phone' | 'avatarUrl' | 'pixKeyType' | 'pixKey'>;
+export interface ProfileUpdate {
+  fullName: string;
+  phone: string;
+  avatarUrl: string | null;
+  pixKeyType?: PixKeyType | null;
+  pixKey?: string | null;
+}
+
+export type WalletTransactionFilter = 'all' | 'deposit' | 'prize' | 'bet' | 'withdraw';
 
 export interface WalletActivityPage {
   items: UserTransaction[];

@@ -5,7 +5,7 @@ interface PixPaymentSheetProps {
   onClose: () => void;
   depositAmount: string;
   pixTimer: number;
-  onCreatePaymentIntent: () => void;
+  pixCode?: string;
 }
 
 export default function PixPaymentSheet({
@@ -13,17 +13,14 @@ export default function PixPaymentSheet({
   onClose,
   depositAmount,
   pixTimer,
-  onCreatePaymentIntent,
+  pixCode,
 }: PixPaymentSheetProps) {
   const [copied, setCopied] = useState(false);
 
   if (!isOpen) return null;
 
-  const pixCode =
-    '00020126360014BR.GOV.BCB.PIX0114+5511999999999520400005303986540510.005802BR5913BS%20CLUBE%20SA6009SAO%20PAULO62070503***6304E2CA';
-
   const handleCopy = () => {
-    if (navigator.clipboard) {
+    if (pixCode && navigator.clipboard) {
       navigator.clipboard.writeText(pixCode);
     }
     setCopied(true);
@@ -54,13 +51,15 @@ export default function PixPaymentSheet({
         </div>
 
         <div className="bg-white p-3 rounded-3xl w-56 h-56 mx-auto flex items-center justify-center border-4 border-teal-500/20 pix-waiting relative">
-          <img
-            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-              pixCode
-            )}`}
-            alt="QR Code Pix"
-            className="w-full h-full opacity-90"
-          />
+          {pixCode ? (
+            <img
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixCode)}`}
+              alt="QR Code Pix"
+              className="w-full h-full opacity-90"
+            />
+          ) : (
+            <span className="text-center text-xs font-semibold text-slate-500">QR Code indisponível</span>
+          )}
           <div className="absolute -bottom-3 bg-slate-900 border border-slate-700 px-3 py-1 rounded-full text-xs font-mono text-slate-300 flex items-center space-x-1.5 shadow-lg">
             <i className="fa-regular fa-clock text-brand-pix"></i>
             <span>
@@ -77,13 +76,15 @@ export default function PixPaymentSheet({
           <input
             type="text"
             readOnly
-            value={pixCode}
+            value={pixCode ?? ''}
+            aria-label="Código Pix"
             className="bg-transparent text-xs text-slate-400 w-full pl-3 focus:outline-none truncate font-mono"
           />
           <button
             type="button"
             onClick={handleCopy}
-            className="bg-slate-800 hover:bg-slate-700 text-brand-pix px-4 py-2.5 rounded-lg text-xs font-bold flex-shrink-0 transition cursor-pointer"
+            disabled={!pixCode}
+            className="bg-slate-800 hover:bg-slate-700 text-brand-pix px-4 py-2.5 rounded-lg text-xs font-bold flex-shrink-0 transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           >
             {copied ? 'Copiado!' : 'Copiar'}
           </button>
@@ -98,14 +99,6 @@ export default function PixPaymentSheet({
             O saldo só será liberado após a confirmação do provedor.
           </span>
         </div>
-
-        <button
-          type="button"
-          onClick={onCreatePaymentIntent}
-          className="w-full rounded-xl bg-brand-pix py-3 text-sm font-bold text-slate-950 transition hover:brightness-110"
-        >
-          Registrar intenção de pagamento
-        </button>
       </div>
     </div>
   );

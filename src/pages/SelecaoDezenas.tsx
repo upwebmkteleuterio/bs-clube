@@ -6,6 +6,8 @@ import NumberGrid from './SelecaoDezenas/components/NumberGrid';
 import SavedGamesList from './SelecaoDezenas/components/SavedGamesList';
 import BottomConfirmationBar from './SelecaoDezenas/components/BottomConfirmationBar';
 import PaymentModal from './SelecaoDezenas/components/PaymentModal';
+import DepositModal from './Carteira/components/DepositModal';
+import PixPaymentSheet from './Carteira/components/PixPaymentSheet';
 
 export default function SelecaoDezenas() {
   const {
@@ -21,6 +23,15 @@ export default function SelecaoDezenas() {
     totalPrice,
     isPaymentSheetOpen,
     setIsPaymentSheetOpen,
+    isDepositModalOpen,
+    setIsDepositModalOpen,
+    isPixSheetOpen,
+    setIsPixSheetOpen,
+    depositAmount,
+    setDepositAmount,
+    pixTimer,
+    pixCode,
+    generatePixPayment,
     isAuthModalOpen,
     closeAuthModal,
     toastMessage,
@@ -104,6 +115,23 @@ export default function SelecaoDezenas() {
         onPayWithBalance={processBalancePayment}
         onPayWithPix={handlePayWithPix}
         isProcessing={isProcessingPayment}
+      />
+
+      <DepositModal
+        isOpen={isDepositModalOpen}
+        onClose={() => setIsDepositModalOpen(false)}
+        depositAmount={depositAmount}
+        onDepositAmountChange={setDepositAmount}
+        onQuickAdd={(value) => setDepositAmount(((Number.parseFloat(depositAmount) || 0) + value).toFixed(2))}
+        onGeneratePix={generatePixPayment}
+      />
+
+      <PixPaymentSheet
+        isOpen={isPixSheetOpen}
+        onClose={() => setIsPixSheetOpen(false)}
+        depositAmount={depositAmount}
+        pixTimer={pixTimer}
+        pixCode={pixCode}
       />
 
       <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />

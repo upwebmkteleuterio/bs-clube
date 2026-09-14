@@ -36,10 +36,34 @@ function mapProfile(row: ProfileRow): UserProfile {
   };
 }
 
+function isValidCpf(value: string) {
+  const digits = value.replace(/\D/g, '');
+  if (digits.length !== 11 || /^([0-9])\1+$/.test(digits)) return false;
+  let sum = 0;
+  for (let index = 0; index < 9; index += 1) sum += Number(digits[index]) * (10 - index);
+  let digit = (sum * 10) % 11;
+  if (digit === 10) digit = 0;
+  if (digit !== Number(digits[9])) return false;
+  sum = 0;
+  for (let index = 0; index < 10; index += 1) sum += Number(digits[index]) * (11 - index);
+  digit = (sum * 10) % 11;
+  if (digit === 10) digit = 0;
+  return digit === Number(digits[10]);
+}
+
+function validatePixKey(type: PixKeyType, value: string) {
+  if (!value) throw new Error('Informe a chave Pix.');
+  if (value.length > 200) throw new Error('A chave Pix deve ter no máximo 200 caracteres.');
+  if (type === 'email' && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) throw new Error('Informe um e-mail válido para a chave Pix.');
+  if (type === 'cpf' && !isValidCpf(value)) throw new Error('Informe um CPF válido para a chave Pix.');
+  if (type === 'phone' && ![10, 11].includes(value.replace(/\D/g, '').length)) throw new Error('Informe um telefone brasileiro válido para a chave Pix.');
+}
+
 function normalizeUpdate(updates: ProfileUpdate) {
   const fullName = updates.fullName?.trim() || null;
   const phone = updates.phone ? updates.phone.replace(/\D/g, '') || null : null;
   const avatarUrl = updates.avatarUrl?.trim() || null;
+  const hasPixUpdate = updates.pixKeyType !== undefined || updates.pixKey !== undefined;
   const pixKeyType = updates.pixKeyType || null;
   const pixKey = updates.pixKey?.trim() || null;
 
@@ -55,16 +79,19 @@ function normalizeUpdate(updates: ProfileUpdate) {
     } catch {
       throw new Error('Informe uma URL de avatar válida.');
     }
-    if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      throw new Error('A URL do avatar deve usar HTTP ou HTTPS.');
-    }
+    if (!['http:', 'https:'].includes(parsedUrl.protocol)) throw new Error('A URL do avatar deve usar HTTP ou HTTPS.');
   }
-  if (pixKeyType && !['cpf', 'email', 'phone', 'random'].includes(pixKeyType)) throw new Error('Informe um tipo de chave Pix válido.');
-  if (pixKey && pixKey.length > 200) throw new Error('A chave Pix deve ter no máximo 200 caracteres.');
-  if (pixKeyType && !pixKey) throw new Error('Informe a chave Pix.');
-  if (pixKey && !pixKeyType) throw new Error('Informe o tipo da chave Pix.');
+  if (hasPixUpdate && (pixKeyType || pixKey)) {
+    if (!pixKeyType || !['cpf', 'email', 'phone', 'random'].includes(pixKeyType)) throw new Error('Informe um tipo de chave Pix válido.');
+    validatePixKey(pixKeyType, pixKey ?? '');
+  }
 
-  return { full_name: fullName, phone, avatar_url: avatarUrl, pix_key_type: pixKeyType, pix_key: pixKey };
+  const update = { full_name: fullName, phone, avatar_url: avatarUrl } as Record<string, string | null>;
+  if (hasPixUpdate) {
+    update.pix_key_type = pixKeyType;
+    update.pix_key = pixKey;
+  }
+  return update;
 }
 
 export const profileService = {

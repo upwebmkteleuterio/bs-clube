@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { UserTransaction } from '../../../types';
+import React from 'react';
+import { UserTransaction, WalletTransactionFilter } from '../../../types';
 
 interface TransactionHistoryProps {
   transactions: UserTransaction[];
@@ -7,6 +7,8 @@ interface TransactionHistoryProps {
   page: number;
   pageSize: number;
   onPageChange: (page: number) => void;
+  filter: WalletTransactionFilter;
+  onFilterChange: (filter: WalletTransactionFilter) => void;
   isLoading: boolean;
   onSelectTransaction: (tx: UserTransaction) => void;
 }
@@ -17,18 +19,13 @@ export default function TransactionHistory({
   page,
   pageSize,
   onPageChange,
+  filter,
+  onFilterChange,
   isLoading,
   onSelectTransaction,
 }: TransactionHistoryProps) {
-  const [filter, setFilter] = useState<'all' | 'deposit' | 'prize' | 'bet' | 'withdraw'>('all');
-
   const formatCurrency = (val: number) =>
     `R$ ${Math.abs(val).toFixed(2).replace('.', ',')}`;
-
-  const filteredTransactions = transactions.filter((t) => {
-    if (filter === 'all') return true;
-    return t.type === filter;
-  });
 
   return (
     <section className="space-y-4">
@@ -44,7 +41,7 @@ export default function TransactionHistory({
         <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 sm:pb-0 text-xs">
           <button
             type="button"
-            onClick={() => setFilter('all')}
+            onClick={() => onFilterChange('all')}
             className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
               filter === 'all'
                 ? 'bg-slate-800 text-emerald-400 font-bold border border-emerald-500/30'
@@ -55,7 +52,7 @@ export default function TransactionHistory({
           </button>
           <button
             type="button"
-            onClick={() => setFilter('deposit')}
+            onClick={() => onFilterChange('deposit')}
             className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
               filter === 'deposit'
                 ? 'bg-slate-800 text-teal-400 font-bold border border-teal-500/30'
@@ -66,7 +63,7 @@ export default function TransactionHistory({
           </button>
           <button
             type="button"
-            onClick={() => setFilter('prize')}
+            onClick={() => onFilterChange('prize')}
             className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
               filter === 'prize'
                 ? 'bg-slate-800 text-amber-400 font-bold border border-amber-500/30'
@@ -77,7 +74,7 @@ export default function TransactionHistory({
           </button>
           <button
             type="button"
-            onClick={() => setFilter('bet')}
+            onClick={() => onFilterChange('bet')}
             className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
               filter === 'bet'
                 ? 'bg-slate-800 text-slate-200 font-bold border border-slate-700'
@@ -88,7 +85,7 @@ export default function TransactionHistory({
           </button>
           <button
             type="button"
-            onClick={() => setFilter('withdraw')}
+            onClick={() => onFilterChange('withdraw')}
             className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
               filter === 'withdraw'
                 ? 'bg-slate-800 text-red-400 font-bold border border-red-500/30'
@@ -116,7 +113,7 @@ export default function TransactionHistory({
               </div>
             ))}
           </div>
-        ) : filteredTransactions.length === 0 ? (
+        ) : transactions.length === 0 ? (
           <div className="p-8 text-center space-y-2">
             <div className="w-12 h-12 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500 mx-auto text-xl">
               <i className="fa-solid fa-receipt"></i>
@@ -124,7 +121,7 @@ export default function TransactionHistory({
             <p className="text-xs text-slate-400">Nenhuma movimentação encontrada neste filtro.</p>
           </div>
         ) : (
-          filteredTransactions.map((t, index) => {
+          transactions.map((t, index) => {
             const isPositive = t.value > 0;
             let iconElement;
             if (t.type === 'deposit') {

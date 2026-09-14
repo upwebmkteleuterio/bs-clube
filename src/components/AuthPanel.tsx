@@ -24,6 +24,10 @@ const localization = {
   },
 };
 
+const authLabelClassName = 'auth-field-label';
+const authInputClassName = 'auth-field-input';
+const authSubmitClassName = 'auth-submit-button';
+
 function normalizePhone(value: string) {
   return value.replace(/\D/g, '').slice(0, 11);
 }
@@ -132,34 +136,34 @@ function SignUpForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+    <form onSubmit={handleSubmit} className="auth-form" noValidate>
       {error && <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300" role="alert">{error}</p>}
       <div>
-        <label htmlFor="signup-full-name" className="mb-1 block text-sm font-semibold text-slate-300">Nome completo</label>
-        <input id="signup-full-name" type="text" required maxLength={200} value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" placeholder="Nome e sobrenome" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" />
+        <label htmlFor="signup-full-name" className={authLabelClassName}>Nome completo</label>
+        <input id="signup-full-name" type="text" required maxLength={200} value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" placeholder="Nome e sobrenome" className={authInputClassName} />
       </div>
       <div>
-        <label htmlFor="signup-email" className="mb-1 block text-sm font-semibold text-slate-300">E-mail</label>
-        <input id="signup-email" type="email" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" />
+        <label htmlFor="signup-email" className={authLabelClassName}>E-mail</label>
+        <input id="signup-email" type="email" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" placeholder="seu@email.com" className={authInputClassName} />
       </div>
       <div>
-        <label htmlFor="signup-password" className="mb-1 block text-sm font-semibold text-slate-300">Senha</label>
+        <label htmlFor="signup-password" className={authLabelClassName}>Senha</label>
         <div className="relative">
-          <input id="signup-password" type={showPassword ? 'text' : 'password'} required minLength={6} maxLength={72} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 pr-12 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" />
+          <input id="signup-password" type={showPassword ? 'text' : 'password'} required minLength={6} maxLength={72} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" placeholder="Sua senha" className={`${authInputClassName} pr-12`} />
           <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} title={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 transition hover:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/60">
             <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
           </button>
         </div>
       </div>
       <div>
-        <label htmlFor="signup-phone" className="mb-1 block text-sm font-semibold text-slate-300">Telefone</label>
-        <input id="signup-phone" type="tel" required inputMode="numeric" maxLength={15} value={phone} onChange={(event) => setPhone(formatPhone(event.target.value))} autoComplete="tel" placeholder="(11) 99999-9999" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" />
+        <label htmlFor="signup-phone" className={authLabelClassName}>Telefone</label>
+        <input id="signup-phone" type="tel" required inputMode="numeric" maxLength={15} value={phone} onChange={(event) => setPhone(formatPhone(event.target.value))} autoComplete="tel" placeholder="(11) 99999-9999" className={authInputClassName} />
       </div>
       <div>
-        <label htmlFor="signup-cpf" className="mb-1 block text-sm font-semibold text-slate-300">CPF</label>
-        <input id="signup-cpf" type="text" required inputMode="numeric" maxLength={14} value={cpf} onChange={(event) => setCpf(formatCpf(event.target.value))} autoComplete="off" placeholder="000.000.000-00" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/40" />
+        <label htmlFor="signup-cpf" className={authLabelClassName}>CPF</label>
+        <input id="signup-cpf" type="text" required inputMode="numeric" maxLength={14} value={cpf} onChange={(event) => setCpf(formatCpf(event.target.value))} autoComplete="off" placeholder="000.000.000-00" className={authInputClassName} />
       </div>
-      <button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-emerald-500 py-3 font-black text-slate-950 transition hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-60">
+      <button type="submit" disabled={isSubmitting} className={authSubmitClassName}>
         {isSubmitting ? 'Criando conta...' : 'Criar conta'}
       </button>
     </form>
@@ -190,7 +194,7 @@ export default function AuthPanel({ view, onViewChange }: AuthPanelProps) {
         </button>
       </div>
 
-      <section className="glass-card rounded-3xl border border-slate-800 p-6 shadow-2xl sm:p-8" aria-label={view === 'sign_in' ? 'Login' : 'Criar conta'}>
+      <section className="auth-panel glass-card rounded-3xl border border-slate-800 p-6 shadow-2xl sm:p-8" aria-label={view === 'sign_in' ? 'Login' : 'Criar conta'}>
         <div className="mb-6 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-2xl text-white shadow-lg shadow-emerald-950/40" aria-hidden="true">
             <i className={`fa-solid ${view === 'sign_in' ? 'fa-arrow-right-to-bracket' : 'fa-user-plus'}`} />
@@ -205,7 +209,16 @@ export default function AuthPanel({ view, onViewChange }: AuthPanelProps) {
             view="sign_in"
             providers={[]}
             showLinks={false}
-            appearance={{ theme: ThemeSupa, variables: { default: { colors: { brand: '#10b981', brandAccent: '#34d399', inputBackground: '#020617', inputText: '#f8fafc' } } } }}
+            appearance={{
+              theme: ThemeSupa,
+              className: {
+                container: 'auth-form',
+                label: authLabelClassName,
+                input: authInputClassName,
+                button: authSubmitClassName,
+              },
+              variables: { default: { colors: { brand: '#10b981', brandAccent: '#34d399', inputBackground: '#020617', inputText: '#f8fafc' } } },
+            }}
             localization={localization}
           />
         ) : <SignUpForm />}
