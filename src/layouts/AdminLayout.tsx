@@ -13,6 +13,8 @@ function AdminLayoutInner() {
   const {
     isSidebarOpen,
     setIsSidebarOpen,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
     withdrawalModal,
     setWithdrawalModal,
     isCategoryModalOpen,
@@ -36,6 +38,7 @@ function AdminLayoutInner() {
       {/* Sidebar Global de Navegação Administrativa */}
       <AdminSidebar
         isOpen={isSidebarOpen}
+        isCollapsed={isSidebarCollapsed}
         onClose={() => setIsSidebarOpen(false)}
         onOpenManualDraw={() => setIsManualDrawModalOpen(true)}
       />
@@ -43,6 +46,8 @@ function AdminLayoutInner() {
       {/* Área Principal de Conteúdo */}
       <main className="flex-1 flex flex-col h-screen relative overflow-hidden bg-brand-dark">
         <AdminHeader
+          isSidebarCollapsed={isSidebarCollapsed}
+          onToggleSidebarCollapse={() => setIsSidebarCollapsed((collapsed) => !collapsed)}
           onToggleSidebar={() => setIsSidebarOpen(true)}
           pendingCount={pendingWithdrawals.length}
         />

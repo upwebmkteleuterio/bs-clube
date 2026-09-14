@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { adminService } from '../services/adminService';
-import { ManualDrawInput } from '../types';
+import { AdminUserStatus, ManualDrawInput } from '../types';
 
 export const ADMIN_METRICS_KEY = ['admin', 'metrics'];
 export const ADMIN_WITHDRAWALS_KEY = ['admin', 'withdrawals'];
@@ -49,12 +49,22 @@ export function useRejectWithdrawal() {
   });
 }
 
-export function useAdminUsers() {
+export function useAdminUsers({
+  page,
+  search,
+  status,
+}: {
+  page: number;
+  search: string;
+  status: AdminUserStatus;
+}) {
   const { user, role } = useAuth();
+  const pageSize = 10;
   return useQuery({
-    queryKey: ADMIN_USERS_KEY,
-    queryFn: () => adminService.getUsers(),
+    queryKey: [...ADMIN_USERS_KEY, { page, search, status }],
+    queryFn: () => adminService.getUsers({ page, pageSize, search, status }),
     enabled: Boolean(user) && role === 'admin',
+    placeholderData: (previousData) => previousData,
     staleTime: 1000 * 30,
   });
 }

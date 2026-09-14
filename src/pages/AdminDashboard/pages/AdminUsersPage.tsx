@@ -11,6 +11,10 @@ export default function AdminUsersPage() {
     setUserSearchTerm,
     userStatusFilter,
     setUserStatusFilter,
+    page,
+    totalPages,
+    totalCount,
+    setPage,
     handleToggleUser,
   } = useAdmin();
 
@@ -18,7 +22,10 @@ export default function AdminUsersPage() {
     <div className="max-w-7xl mx-auto">
       <UsersManagementTable
         users={filteredUsers}
-        totalCount={users.length}
+        totalCount={totalCount}
+        page={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
         isLoading={isUsersLoading}
         searchTerm={userSearchTerm}
         onSearchChange={setUserSearchTerm}

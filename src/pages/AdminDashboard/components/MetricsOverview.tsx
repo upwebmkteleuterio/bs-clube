@@ -42,13 +42,10 @@ export default function MetricsOverview({ metrics, isLoading }: MetricsOverviewP
         <h3 className="font-heading text-2xl sm:text-3xl font-black text-white mb-1">
           {formatCurrency(metrics.totalArrecadado)}
         </h3>
-        <p className="text-xs text-emerald-400 flex items-center">
-          <i className="fa-solid fa-arrow-trend-up mr-1.5"></i>
-          <span>+12% no período</span>
-        </p>
+        <p className="text-xs text-slate-400">Pagamentos confirmados no banco de dados</p>
       </div>
 
-      {/* Lucro (22%) */}
+      {/* Lucro */}
       <div className="glass-card rounded-2xl p-6 border border-emerald-500/20 relative overflow-hidden">
         <div className="absolute -right-6 -top-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none"></div>
         <div className="flex items-center justify-between mb-4 relative">
@@ -65,7 +62,7 @@ export default function MetricsOverview({ metrics, isLoading }: MetricsOverviewP
         <p className="text-xs text-slate-400 relative">Receita líquida retida</p>
       </div>
 
-      {/* Prêmios Pagos (78%) */}
+      {/* Prêmios Pagos */}
       <div className="glass-card rounded-2xl p-6 border border-slate-800/80 hover:border-slate-700 transition">
         <div className="flex items-center justify-between mb-4">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -94,10 +91,7 @@ export default function MetricsOverview({ metrics, isLoading }: MetricsOverviewP
         <h3 className="font-heading text-2xl sm:text-3xl font-black text-white mb-1">
           {metrics.apostadoresAtivos.toLocaleString('pt-BR')}
         </h3>
-        <p className="text-xs text-emerald-400 flex items-center">
-          <i className="fa-solid fa-arrow-trend-up mr-1.5"></i>
-          <span>+85 esta semana</span>
-        </p>
+        <p className="text-xs text-slate-400">Perfis ativos, sem contas admin</p>
       </div>
     </div>
   );

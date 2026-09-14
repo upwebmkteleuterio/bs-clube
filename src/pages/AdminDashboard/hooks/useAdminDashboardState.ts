@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import {
   useAdminMetrics,
   useAdminWithdrawals,
@@ -14,6 +14,7 @@ import { AdminWithdrawal, ManualDrawInput } from '../../../types';
 
 export function useAdminDashboardState() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [activeView, setActiveView] = useState<'dashboard' | 'users' | 'categories'>('dashboard');
 
   // Modals
@@ -25,12 +26,24 @@ export function useAdminDashboardState() {
   // Search & Filter
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [userStatusFilter, setUserStatusFilter] = useState<'all' | 'active' | 'blocked'>('all');
+  const [userPage, setUserPage] = useState(1);
 
   // Queries
   const { data: metrics, isLoading: isMetricsLoading } = useAdminMetrics();
   const { data: withdrawals = [], isLoading: isWithdrawalsLoading } = useAdminWithdrawals();
-  const { data: users = [], isLoading: isUsersLoading } = useAdminUsers();
+  const { data: usersPage, isLoading: isUsersLoading } = useAdminUsers({
+    page: userPage,
+    search: userSearchTerm,
+    status: userStatusFilter,
+  });
+  const users = usersPage?.items ?? [];
+  const totalPages = usersPage?.totalPages ?? 1;
+  const totalCount = usersPage?.totalCount ?? 0;
   const { data: categories = [], isLoading: isCategoriesLoading } = useAdminCategories();
+
+  useEffect(() => {
+    if (userPage > totalPages) setUserPage(totalPages);
+  }, [totalPages, userPage]);
 
   // Mutations
   const approveWithdrawalMutation = useApproveWithdrawal();
@@ -39,18 +52,17 @@ export function useAdminDashboardState() {
   const createCategoryMutation = useCreateCategory();
   const executeManualDrawMutation = useExecuteManualDraw();
 
-  // Filtered users
-  const filteredUsers = useMemo(() => {
-    return users.filter((u) => {
-      const matchesSearch =
-        u.name.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-        u.phone.includes(userSearchTerm);
-      if (!matchesSearch) return false;
-      if (userStatusFilter === 'active') return u.active;
-      if (userStatusFilter === 'blocked') return !u.active;
-      return true;
-    });
-  }, [users, userSearchTerm, userStatusFilter]);
+  const filteredUsers = users;
+
+  const handleUserSearchChange = (term: string) => {
+    setUserSearchTerm(term);
+    setUserPage(1);
+  };
+
+  const handleUserStatusFilterChange = (status: 'all' | 'active' | 'blocked') => {
+    setUserStatusFilter(status);
+    setUserPage(1);
+  };
 
   const pendingWithdrawals = useMemo(() => {
     return withdrawals.filter((w) => w.status === 'pending');
@@ -95,7 +107,7 @@ export function useAdminDashboardState() {
     }
   };
 
-  const handleToggleUser = async (id: number) => {
+  const handleToggleUser = async (id: number | string) => {
     try {
       await toggleUserStatusMutation.mutateAsync(id);
     } catch (err: any) {
@@ -147,6 +159,8 @@ export function useAdminDashboardState() {
   return {
     isSidebarOpen,
     setIsSidebarOpen,
+    isSidebarCollapsed,
+    setIsSidebarCollapsed,
     activeView,
     setActiveView,
     withdrawalModal,
@@ -158,9 +172,13 @@ export function useAdminDashboardState() {
     alertConfig,
     setAlertConfig,
     userSearchTerm,
-    setUserSearchTerm,
+    setUserSearchTerm: handleUserSearchChange,
     userStatusFilter,
-    setUserStatusFilter,
+    setUserStatusFilter: handleUserStatusFilterChange,
+    page: userPage,
+    totalPages,
+    totalCount,
+    setPage: setUserPage,
     metrics,
     isMetricsLoading,
     withdrawals,

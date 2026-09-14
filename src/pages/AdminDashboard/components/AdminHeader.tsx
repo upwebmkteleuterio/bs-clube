@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 
 interface AdminHeaderProps {
   activeView?: 'dashboard' | 'users' | 'categories';
+  isSidebarCollapsed?: boolean;
+  onToggleSidebarCollapse?: () => void;
   onToggleSidebar: () => void;
   pendingCount?: number;
 }
@@ -24,6 +26,8 @@ const VIEW_TITLES = {
 
 export default function AdminHeader({
   activeView,
+  isSidebarCollapsed = false,
+  onToggleSidebarCollapse,
   onToggleSidebar,
   pendingCount = 0,
 }: AdminHeaderProps) {
@@ -44,7 +48,17 @@ export default function AdminHeader({
       <div className="flex items-center space-x-4">
         <button
           type="button"
-          className="md:hidden text-slate-400 hover:text-white p-2 rounded-lg bg-slate-900 border border-slate-800"
+          className="hidden md:flex text-slate-400 hover:text-white p-2 rounded-lg bg-slate-900 border border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          onClick={onToggleSidebarCollapse}
+          aria-label={isSidebarCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+          aria-expanded={!isSidebarCollapsed}
+          title={isSidebarCollapsed ? 'Expandir menu lateral' : 'Recolher menu lateral'}
+        >
+          <i className={`fa-solid ${isSidebarCollapsed ? 'fa-angles-right' : 'fa-angles-left'} text-sm`}></i>
+        </button>
+        <button
+          type="button"
+          className="md:hidden text-slate-400 hover:text-white p-2 rounded-lg bg-slate-900 border border-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           onClick={onToggleSidebar}
           aria-label="Abrir menu"
         >

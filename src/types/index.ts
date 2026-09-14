@@ -131,6 +131,23 @@ export interface AdminUser {
   createdAt?: string;
 }
 
+export type AdminUserStatus = 'all' | 'active' | 'blocked';
+
+export interface AdminUsersQuery {
+  page: number;
+  pageSize: number;
+  search: string;
+  status: AdminUserStatus;
+}
+
+export interface AdminUsersPage {
+  items: AdminUser[];
+  totalCount: number;
+  totalPages: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface AdminCategory {
   id: number | string;
   name: string;

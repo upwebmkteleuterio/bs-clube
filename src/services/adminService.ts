@@ -1,7 +1,16 @@
 import { supabase } from '@/integrations/supabase/client';
-import { AdminWithdrawal, AdminUser, AdminCategory, AdminFinancialMetrics, ManualDrawInput } from '../types';
+import {
+  AdminWithdrawal,
+  AdminUser,
+  AdminCategory,
+  AdminFinancialMetrics,
+  AdminUsersPage,
+  AdminUsersQuery,
+  ManualDrawInput,
+} from '../types';
 
 type Row = Record<string, any>;
+const ADMIN_USERS_PAGE_SIZE = 10;
 
 function mapWithdrawal(row: Row): AdminWithdrawal {
   return {
@@ -25,6 +34,26 @@ function mapUser(row: Row): AdminUser {
     active: row.is_active !== false,
     createdAt: row.created_at,
   };
+}
+
+function escapeSearchTerm(value: string) {
+  return value.replace(/[\\%_(),]/g, '\\$&');
+}
+
+async function getAdminUserIds(): Promise<string[]> {
+  const { data, error } = await supabase.from('user_roles').select('user_id').eq('role', 'admin');
+  if (error) throw error;
+  return (data ?? []).map((row) => String(row.user_id));
+}
+
+async function getWallets(userIds: string[]) {
+  if (userIds.length === 0) return new Map<string, Row>();
+  const { data, error } = await supabase
+    .from('wallet_accounts')
+    .select('user_id, total, bonus')
+    .in('user_id', userIds);
+  if (error) throw error;
+  return new Map((data ?? []).map((wallet) => [String(wallet.user_id), wallet as Row]));
 }
 
 function toIsoDate(value: string) {
@@ -59,22 +88,33 @@ async function requireAdmin() {
 export const adminService = {
   async getMetrics(): Promise<AdminFinancialMetrics> {
     await requireAdmin();
-    // Esta é uma consulta administrativa global, autorizada somente pelas políticas/RPCs de admin.
+    const adminIds = await getAdminUserIds();
+    let activeProfilesQuery = supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('is_active', true);
+    if (adminIds.length > 0) {
+      activeProfilesQuery = activeProfilesQuery.not('id', 'in', `(${adminIds.join(',')})`);
+    }
     const [{ data: payments, error: paymentsError }, { data: ledger, error: ledgerError }, { count, error: usersError }] = await Promise.all([
       supabase.from('payments').select('amount, kind, status'),
-      supabase.from('wallet_ledger').select('amount, entry_type'),
-      supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('is_active', true),
+      supabase.from('wallet_ledger').select('amount, entry_type, status'),
+      activeProfilesQuery,
     ]);
     if (paymentsError) throw paymentsError;
     if (ledgerError) throw ledgerError;
     if (usersError) throw usersError;
     const paymentRows = payments ?? [];
     const ledgerRows = ledger ?? [];
-    const totalArrecadado = paymentRows.filter((row: Row) => row.kind === 'deposit' && row.status === 'confirmed').reduce((sum: number, row: Row) => sum + Number(row.amount ?? 0), 0);
-    const premiosPagos = ledgerRows.filter((row: Row) => row.entry_type === 'prize').reduce((sum: number, row: Row) => sum + Number(row.amount ?? 0), 0);
+    const totalArrecadado = paymentRows
+      .filter((row: Row) => row.kind === 'deposit' && row.status === 'confirmed')
+      .reduce((sum: number, row: Row) => sum + Number(row.amount ?? 0), 0);
+    const premiosPagos = ledgerRows
+      .filter((row: Row) => row.entry_type === 'prize' && row.status === 'success')
+      .reduce((sum: number, row: Row) => sum + Number(row.amount ?? 0), 0);
     return {
       totalArrecadado,
-      lucroRetido: Math.max(0, totalArrecadado - premiosPagos),
+      lucroRetido: totalArrecadado - premiosPagos,
       lucroPercent: totalArrecadado ? ((totalArrecadado - premiosPagos) / totalArrecadado) * 100 : 0,
       premiosPagos,
       premiosPercent: totalArrecadado ? (premiosPagos / totalArrecadado) * 100 : 0,
@@ -104,15 +144,42 @@ export const adminService = {
     return mapWithdrawal(Array.isArray(data) ? data[0] : data);
   },
 
-  async getUsers(): Promise<AdminUser[]> {
+  async getUsers({ page, pageSize, search, status }: AdminUsersQuery): Promise<AdminUsersPage> {
     await requireAdmin();
-    // Consulta administrativa global excepcional, protegida por RLS/política de admin.
-    const { data, error } = await supabase.from('profiles').select('id, full_name, phone, avatar_url, is_active, created_at, wallet_accounts(total, bonus)').order('created_at', { ascending: false });
+    const adminIds = await getAdminUserIds();
+    const safePageSize = Math.max(1, Math.min(pageSize || ADMIN_USERS_PAGE_SIZE, 50));
+    const safePage = Math.max(1, page);
+    const from = (safePage - 1) * safePageSize;
+    const to = from + safePageSize - 1;
+    let profilesQuery = supabase
+      .from('profiles')
+      .select('id, full_name, phone, avatar_url, is_active, created_at', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (adminIds.length > 0) {
+      profilesQuery = profilesQuery.not('id', 'in', `(${adminIds.join(',')})`);
+    }
+    if (status === 'active') profilesQuery = profilesQuery.eq('is_active', true);
+    if (status === 'blocked') profilesQuery = profilesQuery.eq('is_active', false);
+    if (search.trim()) {
+      const searchTerm = escapeSearchTerm(search.trim());
+      profilesQuery = profilesQuery.or(`full_name.ilike.*${searchTerm}*,phone.ilike.*${searchTerm}*`);
+    }
+
+    const { data, count, error } = await profilesQuery;
     if (error) throw error;
-    return (data ?? []).map((row: Row) => {
-      const wallet = Array.isArray(row.wallet_accounts) ? row.wallet_accounts[0] : row.wallet_accounts;
-      return mapUser({ ...row, ...wallet });
-    });
+    const profileRows = (data ?? []) as Row[];
+    const wallets = await getWallets(profileRows.map((row) => String(row.id)));
+    const items = profileRows.map((row) => mapUser({ ...row, ...(wallets.get(String(row.id)) ?? {}) }));
+    const totalCount = count ?? 0;
+    return {
+      items,
+      totalCount,
+      totalPages: Math.max(1, Math.ceil(totalCount / safePageSize)),
+      page: safePage,
+      pageSize: safePageSize,
+    };
   },
 
   async toggleUserStatus(id: number | string): Promise<AdminUser> {
@@ -121,12 +188,12 @@ export const adminService = {
     if (error) throw error;
     const { data, error: readError } = await supabase
       .from('profiles')
-      .select('id, full_name, phone, avatar_url, is_active, created_at, wallet_accounts(total, bonus)')
+      .select('id, full_name, phone, avatar_url, is_active, created_at')
       .eq('id', String(id))
       .single();
     if (readError) throw readError;
-    const wallet = Array.isArray(data.wallet_accounts) ? data.wallet_accounts[0] : data.wallet_accounts;
-    return mapUser({ ...data, ...wallet });
+    const wallets = await getWallets([String(id)]);
+    return mapUser({ ...data, ...(wallets.get(String(id)) ?? {}) });
   },
 
   async getCategories(): Promise<AdminCategory[]> {

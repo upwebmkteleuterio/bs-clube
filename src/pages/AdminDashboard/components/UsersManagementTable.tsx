@@ -4,6 +4,9 @@ import { AdminUser } from '../../../types';
 interface UsersManagementTableProps {
   users: AdminUser[];
   totalCount: number;
+  page?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
   isLoading: boolean;
   searchTerm: string;
   onSearchChange: (term: string) => void;
@@ -15,6 +18,9 @@ interface UsersManagementTableProps {
 export default function UsersManagementTable({
   users,
   totalCount,
+  page = 1,
+  totalPages = 1,
+  onPageChange,
   isLoading,
   searchTerm,
   onSearchChange,
@@ -171,29 +177,37 @@ export default function UsersManagementTable({
             Exibindo <strong className="text-white">{users.length}</strong> de{' '}
             <strong className="text-white">{totalCount}</strong> apostadores
           </span>
-          <div className="flex space-x-1">
+          <div className="flex space-x-1" aria-label="Paginação de apostadores">
             <button
               type="button"
-              className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-40"
-              disabled
+              className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              onClick={() => onPageChange?.(page - 1)}
+              disabled={page <= 1}
+              aria-label="Página anterior"
             >
               <i className="fa-solid fa-chevron-left text-[10px]"></i>
             </button>
+            {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+              <button
+                key={pageNumber}
+                type="button"
+                onClick={() => onPageChange?.(pageNumber)}
+                aria-current={pageNumber === page ? 'page' : undefined}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
+                  pageNumber === page
+                    ? 'bg-emerald-500 text-slate-950 font-bold'
+                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                {pageNumber}
+              </button>
+            ))}
             <button
               type="button"
-              className="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 font-bold flex items-center justify-center text-xs"
-            >
-              1
-            </button>
-            <button
-              type="button"
-              className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white text-xs"
-            >
-              2
-            </button>
-            <button
-              type="button"
-              className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white"
+              className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-slate-400 hover:text-white disabled:opacity-40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              onClick={() => onPageChange?.(page + 1)}
+              disabled={page >= totalPages}
+              aria-label="Próxima página"
             >
               <i className="fa-solid fa-chevron-right text-[10px]"></i>
             </button>
