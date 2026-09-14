@@ -41,6 +41,8 @@ export default function AdminDashboard() {
     setPage: setUserPage,
     categoryStatusFilter,
     setCategoryStatusFilter,
+    categoryMonthFilter,
+    setCategoryMonthFilter,
     categoryPage,
     categoryTotalPages,
     categoryTotalCount,
@@ -123,8 +125,10 @@ export default function AdminDashboard() {
                 page={categoryPage}
                 totalPages={categoryTotalPages}
                 statusFilter={categoryStatusFilter}
+                monthFilter={categoryMonthFilter}
                 onPageChange={setCategoryPage}
                 onStatusFilterChange={setCategoryStatusFilter}
+                onMonthFilterChange={setCategoryMonthFilter}
                 isLoading={isCategoriesLoading}
                 onOpenNewCategory={() => {
                   setEditingCategory(null);

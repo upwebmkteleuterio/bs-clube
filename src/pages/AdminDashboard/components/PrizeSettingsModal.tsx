@@ -23,6 +23,17 @@ export default function PrizeSettingsModal({ isOpen, settings, onClose, onSubmit
 
   if (!isOpen) return null;
 
+  const handleHousePercentageChange = (value: string) => {
+    setHousePercentage(value);
+    const number = Number(value);
+    if (value !== '' && Number.isFinite(number) && number >= 0 && number <= 100) setWinnerPercentage(String((100 - number).toFixed(2)));
+  };
+  const handleWinnerPercentageChange = (value: string) => {
+    setWinnerPercentage(value);
+    const number = Number(value);
+    if (value !== '' && Number.isFinite(number) && number >= 0 && number <= 100) setHousePercentage(String((100 - number).toFixed(2)));
+  };
+
   const house = Number(housePercentage);
   const winners = Number(winnerPercentage);
   const sum = Number((house + winners).toFixed(2));
@@ -55,11 +66,11 @@ export default function PrizeSettingsModal({ isOpen, settings, onClose, onSubmit
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="global-house-percentage" className="block text-xs font-semibold text-slate-400 mb-1">Casa (%)</label>
-              <input id="global-house-percentage" type="number" min="0" max="100" step="0.01" value={housePercentage} onChange={(event) => setHousePercentage(event.target.value)} required className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500" />
+              <input id="global-house-percentage" type="number" min="0" max="100" step="0.01" value={housePercentage} onChange={(event) => handleHousePercentageChange(event.target.value)} required className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500" />
             </div>
             <div>
               <label htmlFor="global-winner-percentage" className="block text-xs font-semibold text-slate-400 mb-1">Ganhadores (%)</label>
-              <input id="global-winner-percentage" type="number" min="0" max="100" step="0.01" value={winnerPercentage} onChange={(event) => setWinnerPercentage(event.target.value)} required className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500" />
+              <input id="global-winner-percentage" type="number" min="0" max="100" step="0.01" value={winnerPercentage} onChange={(event) => handleWinnerPercentageChange(event.target.value)} required className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500" />
             </div>
           </div>
           <p className={`text-xs ${sum === 100 ? 'text-emerald-400' : 'text-rose-400'}`} role="status">Soma: {sum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%{sum !== 100 ? ' — deve ser 100%' : ''}</p>

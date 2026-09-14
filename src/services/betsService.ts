@@ -77,12 +77,30 @@ export const betsService = {
     return data ? mapBet(data) : null;
   },
 
-  async placeBets(poolId: string, numberSets: number[][], cotaPrice: number): Promise<UserBet[]> {
+  async placeBets(poolId: string, numberSets: number[][]): Promise<UserBet[]> {
     await currentUser();
+    if (!Array.isArray(numberSets) || numberSets.length === 0 || numberSets.some((numbers) => !Array.isArray(numbers) || numbers.length < 1)) {
+      throw new Error('Selecione ao menos uma aposta válida.');
+    }
+    const { data: pool, error: poolError } = await supabase
+      .from('pools')
+      .select('min_numbers, max_numbers, total_lottery_numbers')
+      .eq('id', poolId)
+      .maybeSingle();
+    if (poolError) throw poolError;
+    if (!pool) throw new Error('Bolão indisponível.');
+    const requiredNumbers = Number(pool.min_numbers);
+    const totalLotteryNumbers = Number(pool.total_lottery_numbers);
+    if (!Number.isSafeInteger(requiredNumbers) || requiredNumbers < 1 || Number(pool.max_numbers) !== requiredNumbers || numberSets.some((numbers) => numbers.length !== requiredNumbers)) {
+      throw new Error(`Cada aposta deve conter exatamente ${requiredNumbers} dezenas.`);
+    }
+    if (numberSets.some((numbers) => numbers.some((number) => !Number.isSafeInteger(number) || number < 1 || number > totalLotteryNumbers) || new Set(numbers).size !== requiredNumbers)) {
+      throw new Error(`As dezenas devem ser distintas e estar entre 1 e ${totalLotteryNumbers}.`);
+    }
     const { data, error } = await supabase.rpc('place_bets', {
       p_pool_id: poolId,
       p_number_sets: numberSets,
-      p_cota_price: cotaPrice,
+      p_cota_price: null,
     });
     if (error) throw error;
     const rows = Array.isArray(data) ? data : data?.purchased_bets ?? data?.bets ?? (data ? [data] : []);

@@ -17,7 +17,7 @@ export default function BottomConfirmationBar({
   selectedNumbersCount,
   savedGamesCount,
   requiredNumbers,
-  bolaoTitle = 'SORTEIO BIG 10',
+  bolaoTitle = 'Bolão indisponível',
   onClearAll,
   onConfirm,
 }: BottomConfirmationBarProps) {

@@ -91,6 +91,7 @@ function mapCategory(row: Row): AdminCategory {
     name: row.name ?? '',
     concurso: draw?.contest ?? '',
     cota: Number(pool.buy_in ?? 0),
+    quotaId: pool.quota_id ? String(pool.quota_id) : undefined,
     vagas: Number(pool.total_slots ?? 0),
     filled: Number(pool.filled_slots ?? 0),
     drawDate: draw?.draw_date ?? '',
@@ -99,7 +100,7 @@ function mapCategory(row: Row): AdminCategory {
     numbers: Array.isArray(draw?.numbers) ? draw.numbers.map(Number) : [],
     housePercentage: Number(pool.house_percentage ?? DEFAULT_PRIZE_SETTINGS.housePercentage),
     winnerPercentage: Number(pool.winner_percentage ?? DEFAULT_PRIZE_SETTINGS.winnerPercentage),
-    status: row.status === 'inactive' ? 'inativo' : pool.status === 'closed' || pool.status === 'completed' ? 'concluido' : 'em_andamento',
+    status: row.status === 'inactive' ? 'inativo' : pool.status === 'closed' || pool.status === 'completed' || Number(pool.filled_slots ?? 0) >= Number(pool.total_slots ?? 0) ? 'concluido' : 'em_andamento',
   };
 }
 
@@ -117,7 +118,7 @@ function validatePrizeSettings(settings: PrizeSettings) {
   }
 }
 
-const categorySelect = '*, pools!inner(*, draws(id, contest, draw_date, numbers))';
+const categorySelect = '*, pools!inner(*, draws!inner(id, contest, draw_date, numbers))';
 
 async function readCategory(id: number | string): Promise<AdminCategory> {
   const { data, error } = await supabase.from('pool_categories').select(categorySelect).eq('id', String(id)).single();
@@ -137,14 +138,8 @@ function validateCategoryInput(data: AdminCategoryInput) {
   ) {
     throw new Error('Informe um número de concurso válido.');
   }
-  if (
-    typeof data.cota !== 'number' ||
-    !Number.isFinite(data.cota) ||
-    data.cota <= 0 ||
-    Number(data.cota.toFixed(2)) !== data.cota ||
-    data.cota > 9999999999.99
-  ) {
-    throw new Error('Informe um valor de cota válido.');
+  if (typeof data.quotaId !== 'string' || !data.quotaId.trim()) {
+    throw new Error('Selecione uma cota do catálogo.');
   }
   if (typeof data.vagas !== 'number' || !Number.isSafeInteger(data.vagas) || data.vagas <= 0) {
     throw new Error('Informe a quantidade de vagas.');
@@ -332,7 +327,7 @@ export const adminService = {
     return mapUser({ ...data, ...(wallets.get(String(id)) ?? {}) });
   },
 
-  async getCategories({ page, pageSize, status }: AdminCategoriesQuery): Promise<AdminCategoriesPage> {
+  async getCategories({ page, pageSize, status, month }: AdminCategoriesQuery): Promise<AdminCategoriesPage> {
     await requireAdmin();
     const safePageSize = Math.max(1, Math.min(pageSize || ADMIN_CATEGORIES_PAGE_SIZE, 50));
     const safePage = Math.max(1, page);
@@ -342,10 +337,15 @@ export const adminService = {
       .from('pool_categories')
       .select(categorySelect, { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range(from, to);
+      .range(from, to)
+      .in('pools.status', status === 'open' ? ['open', 'late_registration'] : ['closed', 'completed']);
 
-    if (status === 'open') categoriesQuery = categoriesQuery.in('pools.status', ['open', 'late_registration']);
-    if (status === 'closed') categoriesQuery = categoriesQuery.in('pools.status', ['closed', 'completed']);
+    const [year, monthNumber] = month.split('-').map(Number);
+    if (Number.isInteger(year) && Number.isInteger(monthNumber) && monthNumber >= 1 && monthNumber <= 12) {
+      const start = `${month}-01`;
+      const end = new Date(Date.UTC(year, monthNumber, 1)).toISOString().slice(0, 10);
+      categoriesQuery = categoriesQuery.gte('pools.draws.draw_date', start).lt('pools.draws.draw_date', end);
+    }
 
     const { data, count, error } = await categoriesQuery;
     if (error) throw error;
@@ -365,6 +365,8 @@ export const adminService = {
 
     const name = data.name.trim();
     const drawDate = toIsoDate(data.drawDate);
+    const { data: quota, error: quotaError } = await supabase.from('quota_catalog').select('id, amount, is_active').eq('id', data.quotaId).eq('is_active', true).single();
+    if (quotaError) throw quotaError;
     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const { data: category, error: categoryError } = await supabase.from('pool_categories').insert({ name, slug, status: 'active' }).select('*').single();
     if (categoryError) throw categoryError;
@@ -380,7 +382,8 @@ export const adminService = {
       category_id: category.id,
       draw_id: draw.id,
       name,
-      buy_in: data.cota,
+      quota_id: quota.id,
+      buy_in: Number(quota.amount),
       prize_estimate: 0,
       speed: 'normal',
       game_type: 'Mega-Sena',
@@ -407,6 +410,14 @@ export const adminService = {
       .single();
     if (poolLookupError) throw poolLookupError;
 
+    const { data: quota, error: quotaError } = await supabase
+      .from('quota_catalog')
+      .select('id, amount, is_active')
+      .eq('id', data.quotaId)
+      .eq('is_active', true)
+      .single();
+    if (quotaError) throw quotaError;
+
     const name = data.name.trim();
     const drawDate = toIsoDate(data.drawDate);
     const { error: categoryError } = await supabase
@@ -418,7 +429,8 @@ export const adminService = {
       .from('pools')
       .update({
         name,
-        buy_in: data.cota,
+        quota_id: quota.id,
+        buy_in: Number(quota.amount),
         total_slots: data.vagas,
         min_numbers: data.numbersPerBet,
         max_numbers: data.numbersPerBet,

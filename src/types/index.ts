@@ -14,6 +14,8 @@ export interface Game {
   minNumbers?: number;
   maxNumbers?: number;
   totalLotteryNumbers?: number;
+  quotaId?: string;
+  isUnavailable?: boolean;
   createdAt?: string;
 }
 
@@ -156,10 +158,24 @@ export interface PrizeSettings {
   winnerPercentage: number;
 }
 
+export interface Quota {
+  id: string;
+  name: string;
+  amount: number;
+  isActive: boolean;
+  createdAt?: string;
+}
+
+export interface QuotaInput {
+  name: string;
+  amount: number;
+}
+
 export interface AdminCategory {
   id: number | string;
   poolId?: string;
   drawId?: string;
+  quotaId?: string;
   name: string;
   concurso?: string;
   cota: number;
@@ -174,12 +190,13 @@ export interface AdminCategory {
   status: 'em_andamento' | 'concluido' | 'inativo';
 }
 
-export type AdminCategoryStatus = 'all' | 'open' | 'closed';
+export type AdminCategoryStatus = 'open' | 'closed';
 
 export interface AdminCategoriesQuery {
   page: number;
   pageSize: number;
   status: AdminCategoryStatus;
+  month: string;
 }
 
 export interface AdminCategoriesPage {
@@ -193,7 +210,7 @@ export interface AdminCategoriesPage {
 export interface AdminCategoryInput {
   name: string;
   concurso: string;
-  cota: number;
+  quotaId: string;
   vagas: number;
   drawDate: string;
   numbersPerBet: number;

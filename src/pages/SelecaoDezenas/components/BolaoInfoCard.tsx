@@ -20,14 +20,13 @@ export default function BolaoInfoCard({ bolao, pools, isLoading, isPoolsLoading,
     );
   }
 
-  const title = bolao?.nome || 'Sorteio BIG 10';
-  const mesaName = bolao?.mesaName || 'Mesa Ativa #01';
-  const schedule = bolao ? `Sorteio ${bolao.dataSorteio} ${bolao.horarioSorteio}` : 'Sorteio Sábado 20h';
-  const cotaPrice = bolao?.cotaPrice ?? 10;
-  const vagas = bolao?.vagasPreenchidas ?? 12;
-  const vagasTotal = bolao?.vagasTotal ?? 100;
+  const title = bolao?.nome ?? 'Bolão indisponível';
+  const mesaName = bolao?.mesaName ?? '—';
+  const schedule = bolao ? `Sorteio ${bolao.dataSorteio} ${bolao.horarioSorteio}` : '—';
   const requiredNumbers = bolao?.maxNumbers ?? bolao?.minNumbers ?? 6;
-  const description = bolao?.descricao || `Marque ${requiredNumbers} dezenas ou gere múltiplos jogos nesta mesma tela para concorrer.`;
+  const description = bolao?.descricao ?? (bolao ? `Marque ${requiredNumbers} dezenas ou gere múltiplos jogos nesta mesma tela para concorrer.` : 'Selecione um bolão disponível.');
+  const vagas = bolao?.vagasPreenchidas ?? 0;
+  const vagasTotal = bolao?.vagasTotal ?? 0;
   const poolOptions = pools.length > 0 ? pools : bolao ? [bolao] : [];
 
   return (
@@ -63,7 +62,7 @@ export default function BolaoInfoCard({ bolao, pools, isLoading, isPoolsLoading,
           <span className="text-[10px] text-slate-500 font-medium mt-2 block">Valor por Cota</span>
           <div className="mt-1 sm:bg-slate-950 sm:border border-slate-800 rounded-lg sm:px-3 sm:py-2 flex items-center justify-between">
             <span className="font-bold text-emerald-400 text-sm sm:text-base">
-              R$ {cotaPrice.toFixed(2).replace('.', ',')}
+              {bolao ? `R$ ${bolao.cotaPrice.toFixed(2).replace('.', ',')}` : '—'}
             </span>
           </div>
         </div>

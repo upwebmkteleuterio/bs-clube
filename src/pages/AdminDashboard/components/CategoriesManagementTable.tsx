@@ -8,8 +8,10 @@ interface CategoriesManagementTableProps {
   page: number;
   totalPages: number;
   statusFilter: AdminCategoryStatus;
+  monthFilter: string;
   onPageChange: (page: number) => void;
   onStatusFilterChange: (status: AdminCategoryStatus) => void;
+  onMonthFilterChange: (month: string) => void;
   isLoading: boolean;
   onOpenNewCategory: () => void;
   onOpenPrizeSettings: () => void;
@@ -23,8 +25,10 @@ export default function CategoriesManagementTable({
   page,
   totalPages,
   statusFilter,
+  monthFilter,
   onPageChange,
   onStatusFilterChange,
+  onMonthFilterChange,
   isLoading,
   onOpenNewCategory,
   onOpenPrizeSettings,
@@ -33,10 +37,10 @@ export default function CategoriesManagementTable({
 }: CategoriesManagementTableProps) {
   const formatCurrency = (val: number) => `R$ ${val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   const filterClass = (filter: AdminCategoryStatus) =>
-    `px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+    `rounded-xl px-4 py-3 text-sm font-black transition focus:outline-none focus:ring-2 focus:ring-emerald-400/70 cursor-pointer ${
       statusFilter === filter
-        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-        : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
+        ? 'bg-emerald-500 text-slate-950 shadow-sm'
+        : 'text-slate-400 hover:text-white'
     }`;
 
   return (
@@ -56,10 +60,15 @@ export default function CategoriesManagementTable({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <button type="button" onClick={() => onStatusFilterChange('all')} className={filterClass('all')}>Todos</button>
-        <button type="button" onClick={() => onStatusFilterChange('open')} className={filterClass('open')}>Abertos</button>
-        <button type="button" onClick={() => onStatusFilterChange('closed')} className={filterClass('closed')}>Finalizados</button>
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex rounded-2xl border border-slate-800 bg-slate-950/80 p-1" role="tablist" aria-label="Filtro de status dos bolões">
+          <button type="button" onClick={() => onStatusFilterChange('open')} className={filterClass('open')}>Abertos</button>
+          <button type="button" onClick={() => onStatusFilterChange('closed')} className={filterClass('closed')}>Finalizados</button>
+        </div>
+        <label className="flex items-center gap-2 text-xs text-slate-400">
+          <span>Mês</span>
+          <input type="month" value={monthFilter} onChange={(event) => onMonthFilterChange(event.target.value)} className="rounded-lg border border-slate-800 bg-slate-950 px-2 py-1.5 text-slate-200 focus:border-emerald-400 focus:outline-none" />
+        </label>
       </div>
 
       <div className="glass-card rounded-2xl border border-slate-800 overflow-hidden shadow-xl">
@@ -80,7 +89,7 @@ export default function CategoriesManagementTable({
                   <td className="p-4 text-center text-slate-300"><div className="flex flex-col items-center justify-center w-24 mx-auto"><span className="text-xs font-bold font-mono">{category.filled} <span className="text-slate-500 font-normal">/ {category.vagas}</span></span><div className="w-full h-1.5 bg-slate-800 rounded-full mt-1.5 overflow-hidden"><div className="h-full bg-gradient-to-r from-emerald-500 to-brand-accent rounded-full" style={{ width: `${progress}%` }}></div></div></div></td>
                   <td className="p-4 text-center text-slate-300 text-xs font-mono">{category.drawDate || '—'}</td>
                   <td className="p-4 text-center">{completed ? <div className="flex flex-col items-center gap-1"><span className="bg-emerald-500/10 text-emerald-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-emerald-500/20">Concluído</span><div className="flex gap-0.5">{(category.numbers ?? []).map((number) => <span key={number} className="text-[9px] text-amber-300 font-mono">{String(number).padStart(2, '0')}</span>)}</div></div> : inactive ? <span className="bg-slate-800 text-slate-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-slate-700">Inativo</span> : <span className="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-2.5 py-1 rounded-full border border-blue-500/20">Em andamento</span>}</td>
-                  <td className="p-4"><div className="flex justify-center gap-2"><button type="button" onClick={() => onEditCategory(category)} className="px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:text-white hover:border-emerald-400 text-[10px] font-bold transition cursor-pointer" aria-label={`Editar ${category.name}`}><i className="fa-solid fa-pen"></i></button>{!completed && <button type="button" onClick={() => onRegisterResult(category)} className="px-2.5 py-1.5 rounded-lg border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-[10px] font-bold transition cursor-pointer">Registrar resultado</button>}</div></td>
+                  <td className="p-4"><div className="flex justify-center gap-2">{!completed && !inactive && <button type="button" onClick={() => onEditCategory(category)} className="px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300 hover:text-white hover:border-emerald-400 text-[10px] font-bold transition cursor-pointer" aria-label={`Editar ${category.name}`}><i className="fa-solid fa-pen"></i></button>}{!completed && !inactive && <button type="button" onClick={() => onRegisterResult(category)} className="px-2.5 py-1.5 rounded-lg border border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-[10px] font-bold transition cursor-pointer">Registrar resultado</button>}</div></td>
                 </tr>;
               })}
             </tbody>

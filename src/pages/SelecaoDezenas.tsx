@@ -98,7 +98,7 @@ export default function SelecaoDezenas() {
         selectedNumbersCount={selectedNumbers.length}
         savedGamesCount={savedGames.length}
         requiredNumbers={numberLimit}
-        bolaoTitle={bolao?.nome || 'SORTEIO BIG 10'}
+        bolaoTitle={bolao?.nome ?? 'Bolão indisponível'}
         onClearAll={handleClearAllGames}
         onConfirm={handleConfirm}
       />
@@ -108,7 +108,7 @@ export default function SelecaoDezenas() {
       <PaymentModal
         isOpen={isPaymentSheetOpen}
         onClose={() => setIsPaymentSheetOpen(false)}
-        bolaoName={bolao?.nome || 'Sorteio BIG 10'}
+        bolaoName={bolao?.nome ?? 'Bolão indisponível'}
         totalGamesCount={totalGamesCount}
         totalPrice={totalPrice}
         allGames={allFinalGames}

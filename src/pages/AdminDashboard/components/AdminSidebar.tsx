@@ -101,6 +101,18 @@ export default function AdminSidebar({
           </NavLink>
 
           <NavLink
+            to="/admin/cotas"
+            title={isCollapsed ? 'Cotas' : undefined}
+            onClick={() => onClose()}
+            className={({ isActive }) =>
+              `flex items-center px-6 py-3 ${isCollapsed ? 'md:px-0 md:justify-center' : ''} text-sm font-medium transition cursor-pointer ${isActive ? 'bg-emerald-500/10 text-emerald-400 border-r-4 border-emerald-500 font-semibold' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`
+            }
+          >
+            <i className="fa-solid fa-coins w-5 text-left"></i>
+            <span className={isCollapsed ? 'md:hidden' : ''}>Cotas</span>
+          </NavLink>
+
+          <NavLink
             to="/admin/categorias"
             title={isCollapsed ? 'Bolões' : undefined}
             onClick={() => {

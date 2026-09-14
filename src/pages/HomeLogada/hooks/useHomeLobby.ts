@@ -2,37 +2,42 @@ import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useUserBets } from '../../../hooks/useBets';
-import { useGames } from '../../../hooks/useGames';
+import { useGames, useResultsGames } from '../../../hooks/useGames';
+import { useActiveQuotas } from '../../../hooks/useQuotas';
 
-export type FilterCategory = 'todos' | 'meus' | 'cota10' | 'cota20' | 'cota50';
+export type FilterCategory = 'todos' | 'meus' | string;
 
 export function useHomeLobby() {
   const navigate = useNavigate();
   const { session } = useAuth();
   const { data: games = [], isLoading, isError, refetch } = useGames();
+  const { data: closedGames = [], isLoading: isClosedLoading } = useResultsGames();
+  const { data: quotas = [] } = useActiveQuotas();
   const { data: userBets = [] } = useUserBets();
-  const subscribedGames = useMemo(
-    () => [...new Set(userBets.map((bet) => bet.bolaoId))],
-    [userBets],
-  );
+  const subscribedGames = useMemo(() => [...new Set(userBets.map((bet) => bet.bolaoId))], [userBets]);
   const [filterState, setFilterState] = useState<FilterCategory>('todos');
 
-  const filteredGames = useMemo(() => {
-    if (filterState === 'meus') return games.filter((g) => subscribedGames.includes(g.id));
-    if (filterState === 'cota10') return games.filter((g) => g.buyIn <= 10);
-    if (filterState === 'cota20') return games.filter((g) => g.buyIn === 20);
-    if (filterState === 'cota50') return games.filter((g) => g.buyIn >= 50);
-    return games;
-  }, [games, filterState, subscribedGames]);
+  const matchesFilter = (game: typeof games[number]) => {
+    if (filterState === 'meus') return subscribedGames.includes(game.id);
+    if (filterState === 'todos') return true;
+    return game.quotaId === filterState;
+  };
+  const filteredGames = useMemo(() => games.filter(matchesFilter), [games, filterState, subscribedGames]);
+  const filteredClosedGames = useMemo(() => closedGames.filter(matchesFilter), [closedGames, filterState, subscribedGames]);
 
   const handlePlayAction = (gameId?: string) => {
+    const game = games.find((item) => item.id === gameId);
+    if (game?.isUnavailable) return;
     navigate('/selecao-dezenas', { state: { from: '/selecao-dezenas', bolaoId: gameId } });
   };
 
   return {
     games,
+    closedGames,
     filteredGames,
-    isLoading,
+    filteredClosedGames,
+    quotas,
+    isLoading: isLoading || isClosedLoading,
     isError,
     refetch,
     filterState,

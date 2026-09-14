@@ -9,7 +9,9 @@ const firstRelation = (value: unknown): Record<string, any> | undefined =>
 function mapPool(row: PoolRow): Game {
   const category = firstRelation(row.pool_categories);
   const draw = firstRelation(row.draws);
-  const status = row.status as string;
+  const rawStatus = row.status as string;
+  const isFull = Number(row.filled_slots ?? 0) >= Number(row.total_slots ?? 0);
+  const status = isFull && (rawStatus === 'open' || rawStatus === 'late_registration') ? 'closed' : rawStatus;
 
   return {
     id: String(row.id),
@@ -27,6 +29,8 @@ function mapPool(row: PoolRow): Game {
     minNumbers: Number(row.min_numbers ?? 6),
     maxNumbers: Number(row.max_numbers ?? 6),
     totalLotteryNumbers: Number(row.total_lottery_numbers ?? 60),
+    quotaId: row.quota_id ? String(row.quota_id) : undefined,
+    isUnavailable: isFull || status === 'closed' || status === 'completed',
     createdAt: row.created_at,
   };
 }
@@ -50,17 +54,17 @@ export const gamesService = {
       .in('status', ['open', 'late_registration'])
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return (data ?? []).map(mapPool);
+    return (data ?? []).map(mapPool).filter((game) => !game.isUnavailable);
   },
 
   async getResults(): Promise<Game[]> {
     const { data, error } = await supabase
       .from('pools')
       .select(poolSelect)
-      .in('status', ['closed', 'completed'])
+      .in('status', ['open', 'late_registration', 'closed', 'completed'])
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return (data ?? []).map(mapPool);
+    return (data ?? []).map(mapPool).filter((game) => game.isUnavailable);
   },
 
   async getById(id: string): Promise<Game | null> {

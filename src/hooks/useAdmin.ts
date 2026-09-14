@@ -106,12 +106,12 @@ export function useToggleUserStatus() {
   });
 }
 
-export function useAdminCategories({ page, status }: { page: number; status: AdminCategoryStatus }) {
+export function useAdminCategories({ page, status, month }: { page: number; status: AdminCategoryStatus; month: string }) {
   const { user, role } = useAuth();
   const pageSize = 10;
   return useQuery({
-    queryKey: [...ADMIN_CATEGORIES_KEY, { page, status }],
-    queryFn: () => adminService.getCategories({ page, pageSize, status }),
+    queryKey: [...ADMIN_CATEGORIES_KEY, { page, status, month }],
+    queryFn: () => adminService.getCategories({ page, pageSize, status, month }),
     enabled: Boolean(user) && role === 'admin',
     placeholderData: (previousData) => previousData,
     staleTime: 1000 * 30,

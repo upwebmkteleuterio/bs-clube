@@ -28,7 +28,11 @@ export function useAdminDashboardState() {
   const [userSearchTerm, setUserSearchTerm] = useState('');
   const [userStatusFilter, setUserStatusFilter] = useState<'all' | 'active' | 'blocked'>('all');
   const [userPage, setUserPage] = useState(1);
-  const [categoryStatusFilter, setCategoryStatusFilter] = useState<AdminCategoryStatus>('all');
+  const [categoryStatusFilter, setCategoryStatusFilter] = useState<AdminCategoryStatus>('open');
+  const [categoryMonthFilter, setCategoryMonthFilter] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  });
   const [categoryPage, setCategoryPage] = useState(1);
 
   const { data: metrics, isLoading: isMetricsLoading } = useAdminMetrics();
@@ -37,7 +41,7 @@ export function useAdminDashboardState() {
   const users = usersPage?.items ?? [];
   const totalPages = usersPage?.totalPages ?? 1;
   const totalCount = usersPage?.totalCount ?? 0;
-  const { data: categoriesPage, isLoading: isCategoriesLoading } = useAdminCategories({ page: categoryPage, status: categoryStatusFilter });
+  const { data: categoriesPage, isLoading: isCategoriesLoading } = useAdminCategories({ page: categoryPage, status: categoryStatusFilter, month: categoryMonthFilter });
   const { data: prizeSettings } = usePrizeSettings();
   const categories = categoriesPage?.items ?? [];
   const categoryTotalPages = categoriesPage?.totalPages ?? 1;
@@ -63,6 +67,7 @@ export function useAdminDashboardState() {
   const handleUserSearchChange = (term: string) => { setUserSearchTerm(term); setUserPage(1); };
   const handleUserStatusFilterChange = (status: 'all' | 'active' | 'blocked') => { setUserStatusFilter(status); setUserPage(1); };
   const handleCategoryStatusFilterChange = (status: AdminCategoryStatus) => { setCategoryStatusFilter(status); setCategoryPage(1); };
+  const handleCategoryMonthFilterChange = (month: string) => { setCategoryMonthFilter(month); setCategoryPage(1); };
   const pendingWithdrawals = useMemo(() => withdrawals.filter((w) => w.status === 'pending'), [withdrawals]);
 
   const handleApproveWithdrawal = async (id: string) => {
@@ -138,7 +143,7 @@ export function useAdminDashboardState() {
     withdrawalModal, setWithdrawalModal, isCategoryModalOpen, setIsCategoryModalOpen, isPrizeSettingsModalOpen, setIsPrizeSettingsModalOpen, editingCategory, setEditingCategory,
     resultCategory, setResultCategory, alertConfig, setAlertConfig, prizeSettings, userSearchTerm, setUserSearchTerm: handleUserSearchChange,
     userStatusFilter, setUserStatusFilter: handleUserStatusFilterChange, page: userPage, totalPages, totalCount, setPage: setUserPage,
-    categoryStatusFilter, setCategoryStatusFilter: handleCategoryStatusFilterChange, categoryPage, categoryTotalPages, categoryTotalCount, setCategoryPage,
+    categoryStatusFilter, setCategoryStatusFilter: handleCategoryStatusFilterChange, categoryMonthFilter, setCategoryMonthFilter: handleCategoryMonthFilterChange, categoryPage, categoryTotalPages, categoryTotalCount, setCategoryPage,
     metrics, isMetricsLoading, withdrawals, pendingWithdrawals, isWithdrawalsLoading, users, filteredUsers, isUsersLoading,
     categories, isCategoriesLoading, isProcessingWithdrawal: approveWithdrawalMutation.isPending || rejectWithdrawalMutation.isPending,
     isCreatingCategory: createCategoryMutation.isPending || updateCategoryMutation.isPending,

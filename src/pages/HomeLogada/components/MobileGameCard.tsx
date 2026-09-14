@@ -20,8 +20,8 @@ export default function MobileGameCard({
 
   return (
     <div
-      onClick={() => onPlayAction(game.id)}
-      className={`p-3.5 space-y-2.5 transition-all cursor-pointer ${
+      onClick={() => !game.isUnavailable && onPlayAction(game.id)}
+      className={`p-3.5 space-y-2.5 transition-all ${game.isUnavailable ? 'opacity-80' : 'cursor-pointer'} ${
         isSubscribed
           ? 'bg-emerald-950/40 border-l-4 border-l-emerald-500 shadow-inner'
           : 'hover:bg-slate-900/60'
@@ -93,8 +93,8 @@ export default function MobileGameCard({
           <span className="text-slate-300 font-medium truncate block">{game.tipo}</span>
         </div>
         <div>
-          <span className="text-slate-500 text-[9px] block uppercase font-medium">Velocidade</span>
-          <span className="text-slate-300 font-medium truncate block">{game.velocidade}</span>
+          <span className="text-slate-500 text-[9px] block uppercase font-medium">Sorteio</span>
+          <span className="text-slate-300 font-medium truncate block">{game.dataEncerramento ? new Date(game.dataEncerramento).toLocaleDateString('pt-BR') : '—'}</span>
         </div>
       </div>
 
@@ -119,15 +119,16 @@ export default function MobileGameCard({
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onPlayAction(game.id);
+            if (!game.isUnavailable) onPlayAction(game.id);
           }}
-          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold shrink-0 transition flex items-center space-x-1 cursor-pointer ${
+          disabled={game.isUnavailable}
+          className={`px-3 py-1.5 rounded-lg text-[11px] font-bold shrink-0 transition flex items-center space-x-1 ${game.isUnavailable ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'cursor-pointer'} ${
             isSubscribed
               ? 'bg-emerald-500 text-slate-950'
               : 'bg-slate-800 text-slate-200 border border-slate-700'
           }`}
         >
-          <span>{isSubscribed ? 'Ver Jogo' : 'Participar'}</span>
+          <span>{game.isUnavailable ? 'Indisponível' : isSubscribed ? 'Ver Jogo' : 'Participar'}</span>
           <i className="fa-solid fa-chevron-right text-[8px]"></i>
         </button>
       </div>

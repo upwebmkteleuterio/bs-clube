@@ -193,7 +193,7 @@ export function useSelecaoDezenas() {
       return;
     }
     placeBetsMutation.mutate(
-      { bolaoId: bolao.id, numberSets: allFinalGames.map((g) => g.numbers), cotaPrice: unitPrice },
+      { bolaoId: bolao.id, numberSets: allFinalGames.map((g) => g.numbers) },
       {
         onSuccess: () => {
           confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });

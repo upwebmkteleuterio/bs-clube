@@ -9,8 +9,10 @@ export default function AdminCategoriesPage() {
     categoryPage,
     categoryTotalPages,
     categoryStatusFilter,
+    categoryMonthFilter,
     setCategoryPage,
     setCategoryStatusFilter,
+    setCategoryMonthFilter,
     isCategoriesLoading,
     setIsCategoryModalOpen,
     setIsPrizeSettingsModalOpen,
@@ -26,8 +28,10 @@ export default function AdminCategoriesPage() {
         page={categoryPage}
         totalPages={categoryTotalPages}
         statusFilter={categoryStatusFilter}
+        monthFilter={categoryMonthFilter}
         onPageChange={setCategoryPage}
         onStatusFilterChange={setCategoryStatusFilter}
+        onMonthFilterChange={setCategoryMonthFilter}
         isLoading={isCategoriesLoading}
         onOpenNewCategory={() => { setEditingCategory(null); setIsCategoryModalOpen(true); }}
         onOpenPrizeSettings={() => setIsPrizeSettingsModalOpen(true)}

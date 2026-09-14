@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AdminCategory, AdminCategoryInput, PrizeSettings } from '../../../types';
+import { useActiveQuotas } from '../../../hooks/useQuotas';
 
 interface NewCategoryModalProps {
   isOpen: boolean;
@@ -8,18 +9,6 @@ interface NewCategoryModalProps {
   onClose: () => void;
   onSubmit: (data: AdminCategoryInput) => void;
   isSubmitting: boolean;
-}
-
-const MAX_CURRENCY_DIGITS = 12;
-
-function formatCota(digits: string) {
-  if (!digits) return '';
-  return (Number(digits) / 100).toLocaleString('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
 }
 
 function isValidDate(value: string) {
@@ -39,8 +28,9 @@ export default function NewCategoryModal({
 }: NewCategoryModalProps) {
   const [name, setName] = useState('');
   const [concurso, setConcurso] = useState('');
-  const [cotaDigits, setCotaDigits] = useState('');
+  const [quotaId, setQuotaId] = useState('');
   const [vagas, setVagas] = useState('');
+  const { data: quotas = [], isLoading: isQuotasLoading } = useActiveQuotas();
   const [drawDate, setDrawDate] = useState('');
   const [numbersPerBet, setNumbersPerBet] = useState('6');
   const [housePercentage, setHousePercentage] = useState('25');
@@ -52,7 +42,7 @@ export default function NewCategoryModal({
     if (!isOpen) return;
     setName(category?.name ?? '');
     setConcurso(category?.concurso ?? '');
-    setCotaDigits(category ? String(Math.round(category.cota * 100)) : '');
+    setQuotaId(category?.quotaId ?? '');
     setVagas(category ? String(category.vagas) : '');
     setDrawDate(category?.drawDate?.slice(0, 10) ?? '');
     setNumbersPerBet(String(category?.maxNumbers ?? category?.minNumbers ?? 6));
@@ -74,9 +64,8 @@ export default function NewCategoryModal({
       setError('Informe um número de concurso válido.');
       return;
     }
-    const cotaNum = Number(cotaDigits) / 100;
-    if (!Number.isFinite(cotaNum) || cotaNum <= 0 || Number(cotaNum.toFixed(2)) !== cotaNum) {
-      setError('Informe um valor de cota válido.');
+    if (!quotaId) {
+      setError('Selecione uma cota do catálogo.');
       return;
     }
     const vagasNum = Number(vagas);
@@ -106,7 +95,7 @@ export default function NewCategoryModal({
     onSubmit({
       name: name.trim(),
       concurso: concurso.trim(),
-      cota: cotaNum,
+      quotaId,
       vagas: vagasNum,
       drawDate: `${parts[2]}/${parts[1]}/${parts[0]}`,
       numbersPerBet: numbersNum,
@@ -115,10 +104,21 @@ export default function NewCategoryModal({
     });
   };
 
+  const handleHousePercentageChange = (value: string) => {
+    setHousePercentage(value);
+    const number = Number(value);
+    if (value !== '' && Number.isFinite(number) && number >= 0 && number <= 100) setWinnerPercentage(String((100 - number).toFixed(2)));
+  };
+  const handleWinnerPercentageChange = (value: string) => {
+    setWinnerPercentage(value);
+    const number = Number(value);
+    if (value !== '' && Number.isFinite(number) && number >= 0 && number <= 100) setHousePercentage(String((100 - number).toFixed(2)));
+  };
+
   const percentageSum = Number((Number(housePercentage) + Number(winnerPercentage)).toFixed(2));
   const isEditing = Boolean(category);
   const isFormComplete = Boolean(
-    name.trim() && concurso.trim() && cotaDigits && vagas.trim() && numbersPerBet.trim() && drawDate && housePercentage.trim() && winnerPercentage.trim(),
+    name.trim() && concurso.trim() && quotaId && vagas.trim() && numbersPerBet.trim() && drawDate && housePercentage.trim() && winnerPercentage.trim(),
   );
 
   return (
@@ -164,8 +164,11 @@ export default function NewCategoryModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="new-category-cota" className="block text-xs font-semibold text-slate-400 mb-1">Valor da Cota (R$)</label>
-              <input id="new-category-cota" type="text" inputMode="numeric" value={formatCota(cotaDigits)} onChange={(e) => setCotaDigits(e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, MAX_CURRENCY_DIGITS))} placeholder="R$ 0,00" required aria-describedby={error ? 'new-category-error' : undefined} className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 placeholder:text-slate-600" />
+              <label htmlFor="new-category-quota" className="block text-xs font-semibold text-slate-400 mb-1">Cota do catálogo</label>
+              <select id="new-category-quota" value={quotaId} onChange={(e) => setQuotaId(e.target.value)} required disabled={isQuotasLoading} className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500 disabled:opacity-60">
+                <option value="">Selecione uma cota</option>
+                {quotas.map((quota) => <option key={quota.id} value={quota.id}>{quota.name} · R$ {quota.amount.toFixed(2).replace('.', ',')}</option>)}
+              </select>
             </div>
             <div>
               <label htmlFor="new-category-slots" className="block text-xs font-semibold text-slate-400 mb-1">Vagas por Bolão</label>
@@ -184,16 +187,16 @@ export default function NewCategoryModal({
             </div>
           </div>
 
-          <details open={advancedOpen} onToggle={(event) => setAdvancedOpen(event.currentTarget.open)} className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
-            <summary className="cursor-pointer list-none text-sm font-semibold text-slate-300">Configuração avançada</summary>
+          <details open={advancedOpen} onToggle={(event) => setAdvancedOpen(event.currentTarget.open)} className="group rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+            <summary className="cursor-pointer list-none text-sm font-semibold text-slate-300 flex items-center justify-between"><span>Configuração avançada</span><i className="fa-solid fa-chevron-down text-xs text-emerald-400 transition-transform group-open:rotate-180" aria-hidden="true"></i></summary>
             <div className="grid grid-cols-2 gap-3 mt-3">
               <div>
                 <label htmlFor="category-house-percentage" className="block text-xs font-semibold text-slate-400 mb-1">Casa (%)</label>
-                <input id="category-house-percentage" type="number" min="0" max="100" step="0.01" value={housePercentage} onChange={(e) => setHousePercentage(e.target.value)} required className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" />
+                <input id="category-house-percentage" type="number" min="0" max="100" step="0.01" value={housePercentage} onChange={(e) => handleHousePercentageChange(e.target.value)} required className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" />
               </div>
               <div>
                 <label htmlFor="category-winner-percentage" className="block text-xs font-semibold text-slate-400 mb-1">Ganhadores (%)</label>
-                <input id="category-winner-percentage" type="number" min="0" max="100" step="0.01" value={winnerPercentage} onChange={(e) => setWinnerPercentage(e.target.value)} required className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" />
+                <input id="category-winner-percentage" type="number" min="0" max="100" step="0.01" value={winnerPercentage} onChange={(e) => handleWinnerPercentageChange(e.target.value)} required className="w-full bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500" />
               </div>
             </div>
             <p className={`text-xs mt-2 ${percentageSum === 100 ? 'text-emerald-400' : 'text-rose-400'}`} role="status">Soma: {percentageSum.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%{percentageSum !== 100 ? ' — deve ser 100%' : ''}</p>

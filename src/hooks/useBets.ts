@@ -30,8 +30,8 @@ export function useUserBets() {
 export function usePlaceBets() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ bolaoId, numberSets, cotaPrice }: { bolaoId: string; numberSets: number[][]; cotaPrice: number }) =>
-      betsService.placeBets(bolaoId, numberSets, cotaPrice),
+    mutationFn: ({ bolaoId, numberSets }: { bolaoId: string; numberSets: number[][] }) =>
+      betsService.placeBets(bolaoId, numberSets),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: BOLAO_DETAILS_KEY });
       queryClient.invalidateQueries({ queryKey: USER_BETS_KEY });

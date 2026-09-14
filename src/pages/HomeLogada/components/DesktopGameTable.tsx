@@ -32,7 +32,7 @@ export default function DesktopGameTable({
             <th className="py-3.5 px-4">Jogo</th>
             <th className="py-3.5 px-4">Buy-In (Entrada)</th>
             <th className="py-3.5 px-4">Prêmio Estimado</th>
-            <th className="py-3.5 px-4">Velocidade</th>
+            <th className="py-3.5 px-4">Data do sorteio</th>
             <th className="py-3.5 px-4">Tipo</th>
             <th className="py-3.5 px-4">Estado</th>
             <th className="py-3.5 px-4">Inscritos</th>
@@ -50,8 +50,8 @@ export default function DesktopGameTable({
             return (
               <tr
                 key={game.id}
-                onClick={() => onPlayAction(game.id)}
-                className={`transition-all cursor-pointer group ${
+                onClick={() => !game.isUnavailable && onPlayAction(game.id)}
+                className={`transition-all group ${game.isUnavailable ? 'opacity-80' : 'cursor-pointer'} ${
                   isSubscribed
                     ? 'bg-emerald-950/40 hover:bg-emerald-950/60 border-l-4 border-l-emerald-500 font-bold text-white shadow-inner'
                     : 'hover:bg-slate-900/60 text-slate-300 font-normal'
@@ -111,13 +111,11 @@ export default function DesktopGameTable({
                   </span>
                 </td>
 
-                {/* Velocidade */}
+                {/* Data do sorteio */}
                 <td className="py-4 px-4 whitespace-nowrap text-slate-400">
                   <div className="flex items-center space-x-1.5">
-                    <i className="fa-regular fa-clock text-[11px] text-slate-500"></i>
-                    <span className={isSubscribed ? 'text-slate-200 font-semibold' : ''}>
-                      {game.velocidade}
-                    </span>
+                    <i className="fa-regular fa-calendar text-[11px] text-slate-500"></i>
+                    <span className={isSubscribed ? 'text-slate-200 font-semibold' : ''}>{game.dataEncerramento ? new Date(game.dataEncerramento).toLocaleDateString('pt-BR') : '—'}</span>
                   </div>
                 </td>
 
@@ -177,15 +175,16 @@ export default function DesktopGameTable({
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      onPlayAction(game.id);
-                    }}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold transition inline-flex items-center space-x-1.5 cursor-pointer ${
+                      if (!game.isUnavailable) onPlayAction(game.id);
+                      }}
+                      disabled={game.isUnavailable}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold transition inline-flex items-center space-x-1.5 ${game.isUnavailable ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'cursor-pointer'} ${
                       isSubscribed
                         ? 'bg-emerald-500 hover:bg-emerald-400 text-slate-950 shadow-md shadow-emerald-950/50'
                         : 'bg-slate-800 hover:bg-slate-700 text-white border border-slate-700'
                     }`}
                   >
-                    <span>{isSubscribed ? 'Ver Jogo' : 'Participar'}</span>
+                    <span>{game.isUnavailable ? 'Indisponível' : isSubscribed ? 'Ver Jogo' : 'Participar'}</span>
                     <i className="fa-solid fa-chevron-right text-[10px]"></i>
                   </button>
                 </td>
