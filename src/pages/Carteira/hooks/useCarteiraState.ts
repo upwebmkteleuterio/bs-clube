@@ -9,7 +9,14 @@ import { UserTransaction } from '../../../types';
 
 export function useCarteiraState() {
   const { data: balance, isLoading: isBalanceLoading } = useWalletBalance();
-  const { data: transactions = [], isLoading: isTransactionsLoading } = useWalletTransactions();
+  const {
+    data: transactionPage,
+    isLoading: isTransactionsLoading,
+    page: transactionPageNumber,
+    pageSize: transactionPageSize,
+    setPage: setTransactionPage,
+  } = useWalletTransactions({ pageSize: 10 });
+  const transactions = transactionPage?.items ?? [];
   const depositMutation = useDeposit();
   const withdrawMutation = useWithdrawal();
 
@@ -111,6 +118,10 @@ export function useCarteiraState() {
     isBalanceLoading,
     transactions,
     isTransactionsLoading,
+    transactionTotalCount: transactionPage?.totalCount ?? 0,
+    transactionPage: transactionPageNumber,
+    transactionPageSize,
+    setTransactionPage,
     isBalanceVisible,
     setIsBalanceVisible,
     isDepositModalOpen,

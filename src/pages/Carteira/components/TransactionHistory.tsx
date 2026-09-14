@@ -3,12 +3,20 @@ import { UserTransaction } from '../../../types';
 
 interface TransactionHistoryProps {
   transactions: UserTransaction[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
   isLoading: boolean;
   onSelectTransaction: (tx: UserTransaction) => void;
 }
 
 export default function TransactionHistory({
   transactions,
+  totalCount,
+  page,
+  pageSize,
+  onPageChange,
   isLoading,
   onSelectTransaction,
 }: TransactionHistoryProps) {
@@ -28,7 +36,7 @@ export default function TransactionHistory({
         <div className="flex items-center space-x-2">
           <h3 className="font-heading text-lg font-bold text-white">Extrato Recente</h3>
           <span className="text-xs text-slate-500 bg-slate-900 border border-slate-800 px-2 py-0.5 rounded-full">
-            {transactions.length} registros
+            {totalCount} registros
           </span>
         </div>
 
@@ -175,6 +183,33 @@ export default function TransactionHistory({
           })
         )}
       </div>
+
+      {totalCount > pageSize && (
+        <div className="flex items-center justify-between px-1 text-xs text-slate-400">
+          <span>{totalCount} registros no total</span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onPageChange(page - 1)}
+              disabled={page === 1}
+              className="rounded-lg border border-slate-800 px-3 py-1.5 font-semibold transition hover:border-emerald-500/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Página anterior"
+            >
+              Anterior
+            </button>
+            <span>Página {page} de {Math.ceil(totalCount / pageSize)}</span>
+            <button
+              type="button"
+              onClick={() => onPageChange(page + 1)}
+              disabled={page >= Math.ceil(totalCount / pageSize)}
+              className="rounded-lg border border-slate-800 px-3 py-1.5 font-semibold transition hover:border-emerald-500/50 hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Próxima página"
+            >
+              Próxima
+            </button>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

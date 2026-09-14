@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { walletService } from '../services/walletService';
 
@@ -15,14 +16,17 @@ export function useWalletBalance() {
   });
 }
 
-export function useWalletTransactions() {
+export function useWalletTransactions({ pageSize = 10 }: { pageSize?: number } = {}) {
   const { user } = useAuth();
-  return useQuery({
-    queryKey: [...TRANSACTIONS_KEY, user?.id ?? 'guest'],
-    queryFn: () => walletService.getAll(),
+  const [page, setPage] = useState(1);
+  const query = useQuery({
+    queryKey: [...TRANSACTIONS_KEY, user?.id ?? 'guest', page, pageSize],
+    queryFn: () => walletService.getPage(page, pageSize),
     enabled: Boolean(user),
     staleTime: 1000 * 60,
   });
+
+  return { ...query, page, pageSize, setPage };
 }
 
 export function useDeposit() {

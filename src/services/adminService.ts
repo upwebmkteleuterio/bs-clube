@@ -107,7 +107,7 @@ export const adminService = {
   async getUsers(): Promise<AdminUser[]> {
     await requireAdmin();
     // Consulta administrativa global excepcional, protegida por RLS/política de admin.
-    const { data, error } = await supabase.from('profiles').select('*, wallet_accounts(total, bonus)').order('created_at', { ascending: false });
+    const { data, error } = await supabase.from('profiles').select('id, full_name, phone, avatar_url, is_active, created_at, wallet_accounts(total, bonus)').order('created_at', { ascending: false });
     if (error) throw error;
     return (data ?? []).map((row: Row) => {
       const wallet = Array.isArray(row.wallet_accounts) ? row.wallet_accounts[0] : row.wallet_accounts;
@@ -121,7 +121,7 @@ export const adminService = {
     if (error) throw error;
     const { data, error: readError } = await supabase
       .from('profiles')
-      .select('*, wallet_accounts(total, bonus)')
+      .select('id, full_name, phone, avatar_url, is_active, created_at, wallet_accounts(total, bonus)')
       .eq('id', String(id))
       .single();
     if (readError) throw readError;

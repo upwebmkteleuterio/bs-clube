@@ -13,6 +13,10 @@ export default function Carteira() {
     isBalanceLoading,
     transactions,
     isTransactionsLoading,
+    transactionTotalCount,
+    transactionPage,
+    transactionPageSize,
+    setTransactionPage,
     isBalanceVisible,
     setIsBalanceVisible,
     isDepositModalOpen,
@@ -68,6 +72,10 @@ export default function Carteira() {
 
           <TransactionHistory
             transactions={transactions}
+            totalCount={transactionTotalCount}
+            page={transactionPage}
+            pageSize={transactionPageSize}
+            onPageChange={setTransactionPage}
             isLoading={isTransactionsLoading}
             onSelectTransaction={openTransactionReceipt}
           />

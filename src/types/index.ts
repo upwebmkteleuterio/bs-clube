@@ -80,16 +80,28 @@ export interface UserBet {
   cotaPrice: number;
 }
 
+export type PixKeyType = 'cpf' | 'email' | 'phone' | 'random';
+
 export interface UserProfile {
   id: string;
   fullName: string | null;
   phone: string | null;
+  cpf: string | null;
   avatarUrl: string | null;
+  pixKeyType: PixKeyType | null;
+  pixKey: string | null;
   createdAt: string;
   updatedAt: string;
 }
 
-export type ProfileUpdate = Pick<UserProfile, 'fullName' | 'phone' | 'avatarUrl'>;
+export type ProfileUpdate = Pick<UserProfile, 'fullName' | 'phone' | 'avatarUrl' | 'pixKeyType' | 'pixKey'>;
+
+export interface WalletActivityPage {
+  items: UserTransaction[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+}
 
 export interface AdminWithdrawal {
   id: string;

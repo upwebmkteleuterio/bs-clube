@@ -65,6 +65,7 @@ function authErrorMessage(message: string) {
 }
 
 function SignUpForm() {
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -77,9 +78,14 @@ function SignUpForm() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    const normalizedFullName = fullName.trim().replace(/\s+/g, ' ');
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedPhone = normalizePhone(phone);
     const normalizedCpf = normalizeCpf(cpf);
+    if (normalizedFullName.split(' ').filter(Boolean).length < 2 || normalizedFullName.length > 200) {
+      setError('Informe nome e sobrenome.');
+      return;
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || normalizedEmail.length > 254) {
       setError('Informe um e-mail válido.');
       return;
@@ -101,7 +107,7 @@ function SignUpForm() {
     const { data, error: signUpError } = await supabase.auth.signUp({
       email: normalizedEmail,
       password,
-      options: { data: { phone: normalizedPhone, cpf: normalizedCpf } },
+      options: { data: { full_name: normalizedFullName, phone: normalizedPhone, cpf: normalizedCpf } },
     });
     setIsSubmitting(false);
     if (signUpError) {
@@ -123,6 +129,10 @@ function SignUpForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       {error && <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300" role="alert">{error}</p>}
+      <div>
+        <label htmlFor="signup-full-name" className="mb-1 block text-sm font-semibold text-slate-300">Nome completo</label>
+        <input id="signup-full-name" type="text" required maxLength={200} value={fullName} onChange={(event) => setFullName(event.target.value)} autoComplete="name" placeholder="Nome e sobrenome" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400" />
+      </div>
       <div>
         <label htmlFor="signup-email" className="mb-1 block text-sm font-semibold text-slate-300">E-mail</label>
         <input id="signup-email" type="email" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400" />

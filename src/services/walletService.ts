@@ -1,7 +1,22 @@
 import { supabase } from '@/integrations/supabase/client';
-import { UserTransaction, WalletBalance } from '../types';
+import { UserTransaction, WalletActivityPage, WalletBalance } from '../types';
 
 type Row = Record<string, any>;
+type WalletActivityRpcRow = {
+  id: string;
+  type: UserTransaction['type'];
+  title: string;
+  date: string;
+  value: number | string;
+  status: string;
+  pix_key: string | null;
+  pix_key_type: string | null;
+};
+
+type WalletActivityRpcResponse = {
+  items: WalletActivityRpcRow[];
+  total_count: number | string;
+};
 
 function mapBalance(row: Row | null): WalletBalance {
   return {
@@ -50,6 +65,19 @@ function mapWithdrawal(row: Row): UserTransaction {
   };
 }
 
+function mapActivityRow(row: WalletActivityRpcRow): UserTransaction {
+  return {
+    id: String(row.id),
+    type: row.type,
+    title: row.title,
+    date: row.date,
+    value: Number(row.value),
+    status: row.status,
+    pixKeyType: row.pix_key_type ?? undefined,
+    pixKey: row.pix_key ?? undefined,
+  };
+}
+
 async function currentUser() {
   const { data, error } = await supabase.auth.getUser();
   if (error) throw error;
@@ -70,36 +98,23 @@ export const walletService = {
     return mapBalance(data);
   },
 
-  async getAll(): Promise<UserTransaction[]> {
-    const user = await currentUser();
-    const { data: ledger, error: ledgerError } = await supabase
-      .from('wallet_ledger')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (ledgerError) throw ledgerError;
+  async getPage(page: number, pageSize: number): Promise<WalletActivityPage> {
+    await currentUser();
+    const safePage = Math.max(1, Math.floor(page));
+    const safePageSize = Math.min(50, Math.max(1, Math.floor(pageSize)));
+    const { data, error } = await supabase.rpc('get_wallet_activity', {
+      p_page: safePage,
+      p_page_size: safePageSize,
+    });
+    if (error) throw error;
 
-    const { data: payments, error: paymentsError } = await supabase
-      .from('payments')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (paymentsError) throw paymentsError;
-    const { data: withdrawals, error: withdrawalsError } = await supabase
-      .from('withdrawals')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (withdrawalsError) throw withdrawalsError;
-
-    const ledgerTransactions = (ledger ?? [])
-      .filter((row: Row) => !['withdraw', 'withdrawal_reversal'].includes(String(row.entry_type)))
-      .map(mapLedgerEntry);
-    const pendingPayments = (payments ?? [])
-      .filter((row: Row) => row.status !== 'confirmed')
-      .map(mapPayment);
-    return [...ledgerTransactions, ...pendingPayments, ...(withdrawals ?? []).map(mapWithdrawal)]
-      .sort((a, b) => b.date.localeCompare(a.date));
+    const response = (data ?? {}) as WalletActivityRpcResponse;
+    return {
+      items: Array.isArray(response.items) ? response.items.map(mapActivityRow) : [],
+      totalCount: Number(response.total_count ?? 0),
+      page: safePage,
+      pageSize: safePageSize,
+    };
   },
 
   async getById(id: string): Promise<UserTransaction | null> {

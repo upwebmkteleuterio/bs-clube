@@ -3,6 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useProfile, useUpdateProfile } from '../hooks/useProfile';
 import { useWalletBalance, useWalletTransactions } from '../hooks/useWallet';
+import { PixKeyType } from '../types';
+
+function normalizePhone(value: string) {
+  return value.replace(/\D/g, '').slice(0, 11);
+}
+
+function formatPhone(value: string) {
+  const digits = normalizePhone(value);
+  if (digits.length <= 2) return digits ? `(${digits}` : '';
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
+function formatCpf(value: string) {
+  const digits = value.replace(/\D/g, '').slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
 
 export default function Perfil() {
   const navigate = useNavigate();
@@ -10,10 +31,12 @@ export default function Perfil() {
   const { data: profile, isLoading: isProfileLoading } = useProfile();
   const updateProfile = useUpdateProfile();
   const { data: balance } = useWalletBalance();
-  const { data: transactions = [] } = useWalletTransactions();
+  const { data: transactionPage } = useWalletTransactions({ pageSize: 3 });
+  const transactions = transactionPage?.items ?? [];
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const [pixKeyType, setPixKeyType] = useState<PixKeyType | ''>('');
+  const [pixKey, setPixKey] = useState('');
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
   const [profileError, setProfileError] = useState<string | null>(null);
   const balanceTotal = balance?.total ?? 0;
@@ -24,8 +47,9 @@ export default function Perfil() {
   useEffect(() => {
     if (!profile) return;
     setFullName(profile.fullName ?? '');
-    setPhone(profile.phone ?? '');
-    setAvatarUrl(profile.avatarUrl ?? '');
+    setPhone(formatPhone(profile.phone ?? ''));
+    setPixKeyType(profile.pixKeyType ?? '');
+    setPixKey(profile.pixKey ?? '');
   }, [profile]);
 
   const handleSignOut = async () => {
@@ -37,7 +61,13 @@ export default function Perfil() {
     setProfileMessage(null);
     setProfileError(null);
     try {
-      await updateProfile.mutateAsync({ fullName, phone, avatarUrl });
+      await updateProfile.mutateAsync({
+        fullName,
+        phone,
+        avatarUrl: profile?.avatarUrl ?? null,
+        pixKeyType: pixKeyType || null,
+        pixKey: pixKey || null,
+      });
       setProfileMessage('Dados do perfil atualizados.');
     } catch (error) {
       setProfileError(error instanceof Error ? error.message : 'Não foi possível atualizar o perfil.');
@@ -100,12 +130,12 @@ export default function Perfil() {
             <input id="profile-full-name" value={fullName} onChange={(event) => setFullName(event.target.value)} maxLength={200} disabled={isProfileLoading} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
           </div>
           <div>
-            <label htmlFor="profile-phone" className="text-[10px] text-slate-500 block uppercase mb-1">Telefone</label>
-            <input id="profile-phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} maxLength={30} disabled={isProfileLoading} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
+            <label htmlFor="profile-cpf" className="text-[10px] text-slate-500 block uppercase mb-1">CPF</label>
+            <input id="profile-cpf" value={formatCpf(profile?.cpf ?? '')} readOnly disabled={isProfileLoading} className="w-full cursor-not-allowed bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-slate-400 outline-none disabled:opacity-60" />
           </div>
           <div>
-            <label htmlFor="profile-avatar-url" className="text-[10px] text-slate-500 block uppercase mb-1">URL do avatar</label>
-            <input id="profile-avatar-url" type="url" value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} maxLength={500} placeholder="https://..." disabled={isProfileLoading} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
+            <label htmlFor="profile-phone" className="text-[10px] text-slate-500 block uppercase mb-1">Telefone</label>
+            <input id="profile-phone" type="tel" inputMode="numeric" value={phone} onChange={(event) => setPhone(formatPhone(event.target.value))} maxLength={15} disabled={isProfileLoading} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
           </div>
           <div className="flex flex-col gap-2">
             {profileError && <p className="text-xs text-rose-300" role="alert">{profileError}</p>}
@@ -122,8 +152,19 @@ export default function Perfil() {
 
         <div className="glass-card rounded-2xl p-6 border border-slate-800 space-y-4">
           <h4 className="text-sm font-bold text-white flex items-center gap-2"><i className="fa-brands fa-pix text-brand-pix" /><span>Chave Pix para Resgates</span></h4>
-          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800/80 text-sm text-slate-400">
-            A configuração de dados de resgate estará disponível na Fase 2.
+          <div>
+            <label htmlFor="profile-pix-key-type" className="text-[10px] text-slate-500 block uppercase mb-1">Tipo da chave</label>
+            <select id="profile-pix-key-type" value={pixKeyType} onChange={(event) => setPixKeyType(event.target.value as PixKeyType | '')} disabled={isProfileLoading} className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60">
+              <option value="">Selecione</option>
+              <option value="cpf">CPF</option>
+              <option value="email">E-mail</option>
+              <option value="phone">Telefone</option>
+              <option value="random">Chave aleatória</option>
+            </select>
+          </div>
+          <div>
+            <label htmlFor="profile-pix-key" className="text-[10px] text-slate-500 block uppercase mb-1">Chave Pix</label>
+            <input id="profile-pix-key" value={pixKey} onChange={(event) => setPixKey(event.target.value)} maxLength={200} disabled={isProfileLoading} placeholder="Informe sua chave Pix" className="w-full bg-slate-950 p-3.5 rounded-xl border border-slate-800/80 text-sm font-semibold text-white outline-none focus:border-emerald-500 disabled:opacity-60" />
           </div>
         </div>
       </div>
