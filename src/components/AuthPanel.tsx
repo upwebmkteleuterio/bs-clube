@@ -1,6 +1,4 @@
 import { FormEvent, useState } from 'react';
-import { Auth } from '@supabase/auth-ui-react';
-import { ThemeSupa } from '@supabase/auth-ui-shared';
 import { supabase } from '@/integrations/supabase/client';
 
 export type AuthView = 'sign_in' | 'sign_up';
@@ -9,20 +7,6 @@ interface AuthPanelProps {
   view: AuthView;
   onViewChange: (view: AuthView) => void;
 }
-
-const localization = {
-  variables: {
-    sign_in: {
-      email_label: 'E-mail',
-      password_label: 'Senha',
-      email_input_placeholder: 'seu@email.com',
-      password_input_placeholder: 'Sua senha',
-      button_label: 'Entrar',
-      loading_button_label: 'Entrando...',
-    },
-    confirmation_text: 'Verifique seu e-mail para confirmar o cadastro.',
-  },
-};
 
 const authLabelClassName = 'auth-field-label';
 const authInputClassName = 'auth-field-input';
@@ -71,6 +55,71 @@ function authErrorMessage(message: string) {
   if (message.toLowerCase().includes('password')) return 'A senha não atende aos requisitos mínimos.';
   if (message.toLowerCase().includes('invalid login')) return 'E-mail ou senha inválidos.';
   return 'Não foi possível concluir o cadastro. Tente novamente.';
+}
+
+function signInErrorMessage(message: string) {
+  const normalizedMessage = message.toLowerCase();
+  if (normalizedMessage.includes('invalid login') || normalizedMessage.includes('invalid credentials')) {
+    return 'E-mail ou senha inválidos.';
+  }
+  if (normalizedMessage.includes('email not confirmed')) return 'Confirme seu e-mail antes de entrar.';
+  return 'Não foi possível entrar. Tente novamente.';
+}
+
+function SignInForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError(null);
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!normalizedEmail) {
+      setError('Informe seu e-mail.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setError('Informe um e-mail válido.');
+      return;
+    }
+    if (!password) {
+      setError('Informe sua senha.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
+    setIsSubmitting(false);
+    if (signInError) setError(signInErrorMessage(signInError.message));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="auth-form" noValidate>
+      {error && <p className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300" role="alert">{error}</p>}
+      <div>
+        <label htmlFor="signin-email" className={authLabelClassName}>E-mail</label>
+        <input id="signin-email" type="email" required maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" inputMode="email" placeholder="seu@email.com" className={authInputClassName} />
+      </div>
+      <div>
+        <label htmlFor="signin-password" className={authLabelClassName}>Senha</label>
+        <div className="relative">
+          <input id="signin-password" type={showPassword ? 'text' : 'password'} required value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="current-password" inputMode="text" placeholder="Sua senha" className={`${authInputClassName} pr-12`} />
+          <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} aria-pressed={showPassword} title={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 transition hover:text-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400/60">
+            <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+      <button type="submit" disabled={isSubmitting} className={authSubmitClassName}>
+        {isSubmitting ? 'Entrando...' : 'Entrar'}
+      </button>
+    </form>
+  );
 }
 
 function SignUpForm() {
@@ -203,25 +252,7 @@ export default function AuthPanel({ view, onViewChange }: AuthPanelProps) {
           <p className="mt-2 text-sm text-slate-400">{view === 'sign_in' ? 'Entre para continuar no BS Clube.' : 'Cadastre-se para participar dos bolões.'}</p>
         </div>
 
-        {view === 'sign_in' ? (
-          <Auth
-            supabaseClient={supabase}
-            view="sign_in"
-            providers={[]}
-            showLinks={false}
-            appearance={{
-              theme: ThemeSupa,
-              className: {
-                container: 'auth-form',
-                label: authLabelClassName,
-                input: authInputClassName,
-                button: authSubmitClassName,
-              },
-              variables: { default: { colors: { brand: '#10b981', brandAccent: '#34d399', inputBackground: '#020617', inputText: '#f8fafc' } } },
-            }}
-            localization={localization}
-          />
-        ) : <SignUpForm />}
+        {view === 'sign_in' ? <SignInForm /> : <SignUpForm />}
       </section>
     </div>
   );
