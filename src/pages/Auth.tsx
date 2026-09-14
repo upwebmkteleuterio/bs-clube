@@ -23,8 +23,24 @@ function normalizePhone(value: string) {
   return value.replace(/\D/g, '').slice(0, 11);
 }
 
+function formatPhone(value: string) {
+  const digits = normalizePhone(value);
+  if (digits.length <= 2) return digits ? `(${digits}` : '';
+  if (digits.length <= 6) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+  if (digits.length <= 10) return `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
+}
+
 function normalizeCpf(value: string) {
   return value.replace(/\D/g, '').slice(0, 11);
+}
+
+function formatCpf(value: string) {
+  const digits = normalizeCpf(value);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
 }
 
 function isValidCpf(cpf: string) {
@@ -53,6 +69,7 @@ function SignUpForm() {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [cpf, setCpf] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
@@ -112,15 +129,20 @@ function SignUpForm() {
       </div>
       <div>
         <label htmlFor="signup-password" className="mb-1 block text-sm font-semibold text-slate-300">Senha</label>
-        <input id="signup-password" type="password" required minLength={6} maxLength={72} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400" />
+        <div className="relative">
+          <input id="signup-password" type={showPassword ? 'text' : 'password'} required minLength={6} maxLength={72} value={password} onChange={(event) => setPassword(event.target.value)} autoComplete="new-password" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 pr-12 text-white outline-none focus:border-emerald-400" />
+          <button type="button" onClick={() => setShowPassword((visible) => !visible)} aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'} title={showPassword ? 'Ocultar senha' : 'Mostrar senha'} className="absolute inset-y-0 right-0 flex w-12 items-center justify-center text-slate-400 transition hover:text-emerald-400">
+            <i className={`fa-solid ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`} aria-hidden="true" />
+          </button>
+        </div>
       </div>
       <div>
         <label htmlFor="signup-phone" className="mb-1 block text-sm font-semibold text-slate-300">Telefone</label>
-        <input id="signup-phone" type="tel" required inputMode="numeric" maxLength={15} value={phone} onChange={(event) => setPhone(normalizePhone(event.target.value))} autoComplete="tel" placeholder="11999999999" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400" />
+        <input id="signup-phone" type="tel" required inputMode="numeric" maxLength={15} value={phone} onChange={(event) => setPhone(formatPhone(event.target.value))} autoComplete="tel" placeholder="(11) 99999-9999" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400" />
       </div>
       <div>
         <label htmlFor="signup-cpf" className="mb-1 block text-sm font-semibold text-slate-300">CPF</label>
-        <input id="signup-cpf" type="text" required inputMode="numeric" maxLength={11} value={cpf} onChange={(event) => setCpf(normalizeCpf(event.target.value))} autoComplete="off" placeholder="Somente números" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400" />
+        <input id="signup-cpf" type="text" required inputMode="numeric" maxLength={14} value={cpf} onChange={(event) => setCpf(formatCpf(event.target.value))} autoComplete="off" placeholder="000.000.000-00" className="w-full rounded-xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none focus:border-emerald-400" />
       </div>
       <button type="submit" disabled={isSubmitting} className="w-full rounded-xl bg-emerald-500 py-3 font-black text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-60">
         {isSubmitting ? 'Criando conta...' : 'Criar conta'}
