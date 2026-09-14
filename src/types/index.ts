@@ -171,6 +171,8 @@ export interface QuotaInput {
   amount: number;
 }
 
+export type AdminCategoryStatus = 'open' | 'closed' | 'completed';
+
 export interface AdminCategory {
   id: number | string;
   poolId?: string;
@@ -187,10 +189,9 @@ export interface AdminCategory {
   numbers?: number[];
   housePercentage: number;
   winnerPercentage: number;
-  status: 'em_andamento' | 'concluido' | 'inativo';
+  poolStatus: AdminCategoryStatus;
+  status: 'em_andamento' | 'finalizado' | 'concluido' | 'inativo';
 }
-
-export type AdminCategoryStatus = 'open' | 'closed';
 
 export interface AdminCategoriesQuery {
   page: number;
@@ -231,6 +232,54 @@ export interface RegisterResultOutcome {
   winners: number;
   winnerCount: number;
   category: AdminCategory;
+}
+
+export interface AdminResultDetail {
+  pool: {
+    id: string;
+    name: string;
+    buyIn: number;
+    filledSlots: number;
+    totalSlots: number;
+    housePercentage: number;
+    winnerPercentage: number;
+    status: string;
+    createdAt?: string;
+  };
+  draw: {
+    id: string;
+    contest: string;
+    drawDate: string;
+    numbers: number[];
+  };
+  settlement: {
+    id: string;
+    grossAmount: number;
+    houseAmount: number;
+    winnersAmount: number;
+    winnerCount: number;
+    status: string;
+    createdAt?: string;
+  };
+  participantsCount: number;
+  betsCount: number;
+  winners: AdminResultWinner[];
+}
+
+export interface AdminResultWinner {
+  awardId: string;
+  userId: string;
+  name: string;
+  email: string;
+  phone: string;
+  cpf: string;
+  pixKeyType: string;
+  pixKey: string;
+  hits: number;
+  amount: number;
+  numbers: number[];
+  playedAt: string;
+  awardedAt: string;
 }
 
 export interface PrizeAward {

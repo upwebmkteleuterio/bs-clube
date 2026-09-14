@@ -36,8 +36,11 @@ export default function PaymentModal({
     if (animationFrameRef.current !== null) cancelAnimationFrame(animationFrameRef.current);
 
     if (isOpen) {
+      setIsVisible(false);
       setIsMounted(true);
-      animationFrameRef.current = requestAnimationFrame(() => setIsVisible(true));
+      animationFrameRef.current = requestAnimationFrame(() => {
+        animationFrameRef.current = requestAnimationFrame(() => setIsVisible(true));
+      });
     } else if (isMounted) {
       setIsVisible(false);
       closeTimerRef.current = setTimeout(() => setIsMounted(false), 300);
@@ -47,7 +50,7 @@ export default function PaymentModal({
       if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
       if (animationFrameRef.current !== null) cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [isOpen, isMounted]);
+  }, [isOpen]);
 
   const handleClose = () => {
     setIsVisible(false);

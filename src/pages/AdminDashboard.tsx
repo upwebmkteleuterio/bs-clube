@@ -9,6 +9,7 @@ import CategoriesManagementTable from './AdminDashboard/components/CategoriesMan
 import WithdrawalAnalysisModal from './AdminDashboard/components/WithdrawalAnalysisModal';
 import NewCategoryModal from './AdminDashboard/components/NewCategoryModal';
 import RegisterResultModal from './AdminDashboard/components/RegisterResultModal';
+import AdminResultDetailModal from './AdminDashboard/components/AdminResultDetailModal';
 import AdminFeedbackModal from './AdminDashboard/components/AdminFeedbackModal';
 import PrizeSettingsModal from './AdminDashboard/components/PrizeSettingsModal';
 
@@ -29,6 +30,11 @@ export default function AdminDashboard() {
     setEditingCategory,
     resultCategory,
     setResultCategory,
+    readOnlyResultCategory,
+    setReadOnlyResultCategory,
+    resultDetails,
+    isResultDetailsLoading,
+    resultDetailsError,
     alertConfig,
     setAlertConfig,
     userSearchTerm,
@@ -140,6 +146,7 @@ export default function AdminDashboard() {
                   setIsCategoryModalOpen(true);
                 }}
                 onRegisterResult={setResultCategory}
+                onViewResult={setReadOnlyResultCategory}
               />
             </div>
           )}
@@ -173,6 +180,15 @@ export default function AdminDashboard() {
         onClose={() => setResultCategory(null)}
         onSubmit={handleRegisterResult}
         isSubmitting={isRegisteringResult}
+      />
+
+      <AdminResultDetailModal
+        isOpen={Boolean(readOnlyResultCategory)}
+        category={readOnlyResultCategory}
+        result={resultDetails}
+        isLoading={isResultDetailsLoading}
+        error={resultDetailsError}
+        onClose={() => setReadOnlyResultCategory(null)}
       />
 
       <PrizeSettingsModal

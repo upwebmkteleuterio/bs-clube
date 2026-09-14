@@ -18,6 +18,7 @@ export default function AdminCategoriesPage() {
     setIsPrizeSettingsModalOpen,
     setEditingCategory,
     setResultCategory,
+    setReadOnlyResultCategory,
   } = useAdmin();
 
   return (
@@ -37,6 +38,7 @@ export default function AdminCategoriesPage() {
         onOpenPrizeSettings={() => setIsPrizeSettingsModalOpen(true)}
         onEditCategory={(category) => { setEditingCategory(category); setIsCategoryModalOpen(true); }}
         onRegisterResult={(category) => setResultCategory(category)}
+        onViewResult={(category) => setReadOnlyResultCategory(category)}
       />
     </div>
   );

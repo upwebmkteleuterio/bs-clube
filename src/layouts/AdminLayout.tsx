@@ -6,6 +6,7 @@ import AdminHeader from '../pages/AdminDashboard/components/AdminHeader';
 import WithdrawalAnalysisModal from '../pages/AdminDashboard/components/WithdrawalAnalysisModal';
 import NewCategoryModal from '../pages/AdminDashboard/components/NewCategoryModal';
 import RegisterResultModal from '../pages/AdminDashboard/components/RegisterResultModal';
+import AdminResultDetailModal from '../pages/AdminDashboard/components/AdminResultDetailModal';
 import AdminFeedbackModal from '../pages/AdminDashboard/components/AdminFeedbackModal';
 import PrizeSettingsModal from '../pages/AdminDashboard/components/PrizeSettingsModal';
 
@@ -14,6 +15,7 @@ function AdminLayoutInner() {
     isSidebarOpen, setIsSidebarOpen, isSidebarCollapsed, setIsSidebarCollapsed,
     withdrawalModal, setWithdrawalModal, isCategoryModalOpen, setIsCategoryModalOpen,
     isPrizeSettingsModalOpen, setIsPrizeSettingsModalOpen, editingCategory, setEditingCategory, resultCategory, setResultCategory,
+    readOnlyResultCategory, setReadOnlyResultCategory, resultDetails, isResultDetailsLoading, resultDetailsError,
     alertConfig, setAlertConfig, prizeSettings, pendingWithdrawals, isProcessingWithdrawal,
     isCreatingCategory, isUpdatingPrizeSettings, isRegisteringResult, handleApproveWithdrawal, handleRejectWithdrawal,
     handleCreateCategory, handleUpdateCategory, handleUpdatePrizeSettings, handleRegisterResult,
@@ -60,6 +62,14 @@ function AdminLayoutInner() {
         onClose={() => setResultCategory(null)}
         onSubmit={handleRegisterResult}
         isSubmitting={isRegisteringResult}
+      />
+      <AdminResultDetailModal
+        isOpen={Boolean(readOnlyResultCategory)}
+        category={readOnlyResultCategory}
+        result={resultDetails}
+        isLoading={isResultDetailsLoading}
+        error={resultDetailsError}
+        onClose={() => setReadOnlyResultCategory(null)}
       />
       <PrizeSettingsModal
         isOpen={isPrizeSettingsModalOpen}

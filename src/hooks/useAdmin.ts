@@ -11,6 +11,7 @@ export const ADMIN_METRICS_KEY = ['admin', 'metrics'];
 export const ADMIN_WITHDRAWALS_KEY = ['admin', 'withdrawals'];
 export const ADMIN_USERS_KEY = ['admin', 'users'];
 export const ADMIN_CATEGORIES_KEY = ['admin', 'categories'];
+export const ADMIN_RESULT_DETAILS_KEY = ['admin', 'result-details'];
 export const ADMIN_PRIZE_SETTINGS_KEY = ['admin', 'prize-settings'];
 
 export function usePrizeSettings() {
@@ -118,6 +119,16 @@ export function useAdminCategories({ page, status, month }: { page: number; stat
   });
 }
 
+export function useAdminResultDetails(poolId?: string) {
+  const { user, role } = useAuth();
+  return useQuery({
+    queryKey: [...ADMIN_RESULT_DETAILS_KEY, poolId ?? null],
+    queryFn: () => adminService.getAdminResultDetails(poolId as string),
+    enabled: Boolean(user) && role === 'admin' && Boolean(poolId),
+    staleTime: 1000 * 30,
+  });
+}
+
 export function useCreateCategory() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -151,6 +162,7 @@ export function useRegisterOfficialResult() {
     mutationFn: (data: RegisterResultInput) => adminService.registerOfficialResult(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ADMIN_CATEGORIES_KEY });
+      queryClient.invalidateQueries({ queryKey: ADMIN_RESULT_DETAILS_KEY });
       queryClient.invalidateQueries({ queryKey: ADMIN_METRICS_KEY });
       queryClient.invalidateQueries({ queryKey: ['games'] });
       queryClient.invalidateQueries({ queryKey: RESULTS_GAMES_QUERY_KEY });
