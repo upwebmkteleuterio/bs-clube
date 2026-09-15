@@ -56,6 +56,14 @@ async function getAdminUserIds(): Promise<string[]> {
   return (data ?? []).map((row) => String(row.user_id));
 }
 
+function getCurrentMonthRange() {
+  const now = new Date();
+  return {
+    start: new Date(now.getFullYear(), now.getMonth(), 1).toISOString(),
+    end: new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString(),
+  };
+}
+
 async function getWallets(userIds: string[]) {
   if (userIds.length === 0) return new Map<string, Row>();
   const { data, error } = await supabase
@@ -225,36 +233,49 @@ export const adminService = {
   async getMetrics(): Promise<AdminFinancialMetrics> {
     await requireAdmin();
     const adminIds = await getAdminUserIds();
-    let activeProfilesQuery = supabase
-      .from('profiles')
-      .select('id', { count: 'exact', head: true })
-      .eq('is_active', true);
-    if (adminIds.length > 0) {
-      activeProfilesQuery = activeProfilesQuery.not('id', 'in', `(${adminIds.join(',')})`);
-    }
-    const [{ data: payments, error: paymentsError }, { data: ledger, error: ledgerError }, { count, error: usersError }] = await Promise.all([
-      supabase.from('payments').select('amount, kind, status'),
-      supabase.from('wallet_ledger').select('amount, entry_type, status'),
-      activeProfilesQuery,
+    const { start, end } = getCurrentMonthRange();
+    const [{ data: settlements, error: settlementsError }, { data: purchasedBets, error: betsError }] = await Promise.all([
+      supabase
+        .from('prize_settlements')
+        .select('gross_amount, winners_amount, house_amount')
+        .eq('status', 'success')
+        .gte('created_at', start)
+        .lt('created_at', end),
+      supabase
+        .from('purchased_bets')
+        .select('user_id')
+        .gte('created_at', start)
+        .lt('created_at', end),
     ]);
-    if (paymentsError) throw paymentsError;
-    if (ledgerError) throw ledgerError;
-    if (usersError) throw usersError;
-    const paymentRows = payments ?? [];
-    const ledgerRows = ledger ?? [];
-    const totalArrecadado = paymentRows
-      .filter((row: Row) => row.kind === 'deposit' && row.status === 'confirmed')
-      .reduce((sum: number, row: Row) => sum + Number(row.amount ?? 0), 0);
-    const premiosPagos = ledgerRows
-      .filter((row: Row) => row.entry_type === 'prize' && row.status === 'success')
-      .reduce((sum: number, row: Row) => sum + Number(row.amount ?? 0), 0);
+    if (settlementsError) throw settlementsError;
+    if (betsError) throw betsError;
+
+    const totalArrecadado = (settlements ?? []).reduce(
+      (sum: number, row: Row) => sum + Number(row.gross_amount ?? 0),
+      0,
+    );
+    const premiosPagos = (settlements ?? []).reduce(
+      (sum: number, row: Row) => sum + Number(row.winners_amount ?? 0),
+      0,
+    );
+    const lucroRetido = (settlements ?? []).reduce(
+      (sum: number, row: Row) => sum + Number(row.house_amount ?? 0),
+      0,
+    );
+    const adminIdSet = new Set(adminIds);
+    const apostadoresAtivos = new Set(
+      (purchasedBets ?? [])
+        .map((row: Row) => String(row.user_id))
+        .filter((userId) => !adminIdSet.has(userId)),
+    ).size;
+
     return {
       totalArrecadado,
-      lucroRetido: totalArrecadado - premiosPagos,
-      lucroPercent: totalArrecadado ? ((totalArrecadado - premiosPagos) / totalArrecadado) * 100 : 0,
+      lucroRetido,
+      lucroPercent: totalArrecadado ? (lucroRetido / totalArrecadado) * 100 : 0,
       premiosPagos,
       premiosPercent: totalArrecadado ? (premiosPagos / totalArrecadado) * 100 : 0,
-      apostadoresAtivos: count ?? 0,
+      apostadoresAtivos,
     };
   },
 

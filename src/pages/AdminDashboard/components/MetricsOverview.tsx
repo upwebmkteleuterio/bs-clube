@@ -42,7 +42,7 @@ export default function MetricsOverview({ metrics, isLoading }: MetricsOverviewP
         <h3 className="font-heading text-2xl sm:text-3xl font-black text-white mb-1">
           {formatCurrency(metrics.totalArrecadado)}
         </h3>
-        <p className="text-xs text-slate-400">Pagamentos confirmados no banco de dados</p>
+        <p className="text-xs text-slate-400">Apurações bem-sucedidas do mês atual</p>
       </div>
 
       {/* Lucro */}
@@ -59,7 +59,7 @@ export default function MetricsOverview({ metrics, isLoading }: MetricsOverviewP
         <h3 className="font-heading text-2xl sm:text-3xl font-black text-emerald-400 mb-1 relative">
           {formatCurrency(metrics.lucroRetido)}
         </h3>
-        <p className="text-xs text-slate-400 relative">Receita líquida retida</p>
+        <p className="text-xs text-slate-400 relative">Receita líquida retida nas apurações do mês</p>
       </div>
 
       {/* Prêmios Pagos */}
@@ -75,7 +75,7 @@ export default function MetricsOverview({ metrics, isLoading }: MetricsOverviewP
         <h3 className="font-heading text-2xl sm:text-3xl font-black text-white mb-1">
           {formatCurrency(metrics.premiosPagos)}
         </h3>
-        <p className="text-xs text-slate-400">Distribuído aos vencedores</p>
+        <p className="text-xs text-slate-400">Distribuído aos vencedores no mês atual</p>
       </div>
 
       {/* Apostadores Ativos */}
@@ -91,7 +91,7 @@ export default function MetricsOverview({ metrics, isLoading }: MetricsOverviewP
         <h3 className="font-heading text-2xl sm:text-3xl font-black text-white mb-1">
           {metrics.apostadoresAtivos.toLocaleString('pt-BR')}
         </h3>
-        <p className="text-xs text-slate-400">Perfis ativos, sem contas admin</p>
+        <p className="text-xs text-slate-400">Usuários com apostas criadas no mês, sem admins</p>
       </div>
     </div>
   );
