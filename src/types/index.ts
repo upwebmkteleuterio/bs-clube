@@ -58,6 +58,21 @@ export interface WalletBalance {
   bonus: number;
 }
 
+export interface DepositCreationResult {
+  balance: WalletBalance;
+  transaction: UserTransaction;
+  pixCode?: string;
+  qrCodeBase64?: string;
+  paymentId: string;
+  expiresAt: string;
+}
+
+export interface DepositStatus {
+  id: string;
+  status: 'pending' | 'confirmed' | 'canceled' | 'failed';
+  paidAt: string | null;
+}
+
 export interface BolaoDetails {
   id: string;
   nome: string;

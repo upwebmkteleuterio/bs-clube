@@ -1,0 +1,1 @@
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS provider_status text, ADD COLUMN IF NOT EXISTS qr_code text, ADD COLUMN IF NOT EXISTS qr_code_base64 text, ADD COLUMN IF NOT EXISTS webhook_url text, ADD COLUMN IF NOT EXISTS expires_at timestamp with time zone, ADD COLUMN IF NOT EXISTS paid_at timestamp with time zone;

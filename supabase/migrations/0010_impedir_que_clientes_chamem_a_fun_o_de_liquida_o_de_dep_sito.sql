@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.settle_deposit(text, text, bigint, text, timestamp with time zone, jsonb) FROM PUBLIC;

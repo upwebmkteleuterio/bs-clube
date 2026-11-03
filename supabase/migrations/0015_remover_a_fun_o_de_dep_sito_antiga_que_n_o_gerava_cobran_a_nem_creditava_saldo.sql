@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.create_payment_intent(numeric, text);

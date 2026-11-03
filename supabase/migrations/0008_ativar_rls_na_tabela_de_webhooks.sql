@@ -1,0 +1,1 @@
+ALTER TABLE public.payment_webhook_events ENABLE ROW LEVEL SECURITY;

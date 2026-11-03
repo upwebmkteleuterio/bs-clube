@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS payments_provider_external_idx ON public.payments (provider, external_id);

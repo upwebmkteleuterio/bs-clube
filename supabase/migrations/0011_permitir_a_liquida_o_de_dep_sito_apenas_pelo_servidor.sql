@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.settle_deposit(text, text, bigint, text, timestamp with time zone, jsonb) TO service_role;

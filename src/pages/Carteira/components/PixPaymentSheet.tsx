@@ -6,6 +6,9 @@ interface PixPaymentSheetProps {
   depositAmount: string;
   pixTimer: number;
   pixCode?: string;
+  qrCodeBase64?: string;
+  status?: 'pending' | 'confirmed' | 'canceled' | 'failed';
+  errorMessage?: string;
 }
 
 export default function PixPaymentSheet({
@@ -14,6 +17,9 @@ export default function PixPaymentSheet({
   depositAmount,
   pixTimer,
   pixCode,
+  qrCodeBase64,
+  status = 'pending',
+  errorMessage,
 }: PixPaymentSheetProps) {
   const [copied, setCopied] = useState(false);
 
@@ -51,7 +57,9 @@ export default function PixPaymentSheet({
         </div>
 
         <div className="bg-white p-3 rounded-3xl w-56 h-56 mx-auto flex items-center justify-center border-4 border-teal-500/20 pix-waiting relative">
-          {pixCode ? (
+          {qrCodeBase64 ? (
+            <img src={qrCodeBase64} alt="QR Code Pix" className="w-full h-full" />
+          ) : pixCode ? (
             <img
               src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixCode)}`}
               alt="QR Code Pix"
@@ -90,15 +98,25 @@ export default function PixPaymentSheet({
           </button>
         </div>
 
-        <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-3 flex flex-col items-center justify-center text-center space-y-2 mt-2">
-          <i className="fa-solid fa-circle-notch fa-spin text-brand-pix text-xl"></i>
-          <span className="text-xs text-slate-300 font-medium">
-            Aguardando confirmação de pagamento...
-          </span>
-          <span className="text-[10px] text-slate-500">
-            O saldo só será liberado após a confirmação do provedor.
-          </span>
-        </div>
+        {status === 'confirmed' ? (
+          <div role="status" className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex flex-col items-center justify-center text-center space-y-2 mt-2">
+            <i className="fa-solid fa-circle-check text-emerald-400 text-xl"></i>
+            <span className="text-xs text-emerald-200 font-medium">Pagamento confirmado!</span>
+            <span className="text-[10px] text-slate-300">Seu saldo foi liberado na carteira.</span>
+          </div>
+        ) : errorMessage || status === 'failed' || status === 'canceled' ? (
+          <div role="alert" className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex flex-col items-center justify-center text-center space-y-2 mt-2">
+            <i className="fa-solid fa-circle-exclamation text-red-400 text-xl"></i>
+            <span className="text-xs text-red-200 font-medium">Não foi possível concluir o depósito.</span>
+            <span className="text-[10px] text-slate-300">{errorMessage ?? 'Esta cobrança Pix foi cancelada ou não foi concluída.'}</span>
+          </div>
+        ) : (
+          <div role="status" className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-3 flex flex-col items-center justify-center text-center space-y-2 mt-2">
+            <i className="fa-solid fa-circle-notch fa-spin text-brand-pix text-xl"></i>
+            <span className="text-xs text-slate-300 font-medium">Aguardando confirmação de pagamento...</span>
+            <span className="text-[10px] text-slate-500">O saldo só será liberado após a confirmação do provedor.</span>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.create_deposit_intent(uuid, numeric) FROM anon, authenticated;

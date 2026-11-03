@@ -52,6 +52,26 @@ export function useDeposit() {
   });
 }
 
+export function useDepositStatus(paymentId?: string) {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const query = useQuery({
+    queryKey: ['wallet', 'deposit-status', user?.id ?? 'guest', paymentId],
+    queryFn: () => walletService.getDepositStatus(paymentId!),
+    enabled: Boolean(user && paymentId),
+    refetchInterval: (currentQuery) => currentQuery.state.data?.status === 'pending' ? 4000 : false,
+  });
+
+  useEffect(() => {
+    if (query.data?.status === 'confirmed') {
+      queryClient.invalidateQueries({ queryKey: WALLET_BALANCE_KEY });
+      queryClient.invalidateQueries({ queryKey: TRANSACTIONS_KEY });
+    }
+  }, [query.data?.status, queryClient]);
+
+  return query;
+}
+
 export function useWithdrawal() {
   const queryClient = useQueryClient();
   return useMutation({

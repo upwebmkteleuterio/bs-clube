@@ -39,6 +39,10 @@ export default function Carteira() {
     handleWithdrawKeyChange,
     pixTimer,
     pixCode,
+    qrCodeBase64,
+    depositStatus,
+    depositError,
+    isDepositSuccess,
     handleDepositInput,
     addDepositQuick,
     generatePixPayment,
@@ -51,6 +55,11 @@ export default function Carteira() {
   return (
     <div className="min-h-screen flex flex-col pb-28">
       <main className="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-6">
+        {isDepositSuccess && (
+          <div role="status" className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm font-medium text-emerald-200">
+            Pagamento confirmado! Seu saldo foi liberado na carteira.
+          </div>
+        )}
         <div className="space-y-6">
           <BalanceCard
             balance={balance}
@@ -98,6 +107,9 @@ export default function Carteira() {
         depositAmount={depositAmount}
         pixTimer={pixTimer}
         pixCode={pixCode}
+        qrCodeBase64={qrCodeBase64}
+        status={depositStatus}
+        errorMessage={depositError}
       />
 
       <WithdrawModal

@@ -1,0 +1,1 @@
+REVOKE ALL ON TABLE public.payment_webhook_events FROM anon, authenticated;

@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.create_deposit_intent(uuid, numeric) TO service_role;

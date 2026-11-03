@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { UserTransaction, WalletActivityPage, WalletBalance, WalletTransactionFilter } from '../types';
+import { DepositCreationResult, DepositStatus, UserTransaction, WalletActivityPage, WalletBalance, WalletTransactionFilter } from '../types';
 
 type Row = Record<string, any>;
 type WalletActivityRpcRow = {
@@ -131,19 +131,50 @@ export const walletService = {
     return withdrawal ? mapWithdrawal(withdrawal) : null;
   },
 
-  async createDeposit(amount: number): Promise<{ balance: WalletBalance; transaction: UserTransaction; pixCode?: string }> {
-    await currentUser();
-    if (!Number.isFinite(amount) || amount <= 0) throw new Error('Informe um valor de depósito válido.');
-    const { data, error } = await supabase.rpc('create_payment_intent', {
-      p_amount: amount,
-      p_kind: 'deposit',
-    });
+  async createDeposit(amount: number): Promise<DepositCreationResult> {
+    const user = await currentUser();
+    if (!Number.isFinite(amount) || amount < 5 || amount > 5000) throw new Error('O valor do depósito deve ser entre R$ 5,00 e R$ 5.000,00.');
+    const { data, error } = await supabase.functions.invoke('pushinpay-create-charge', { body: { amount } });
+    if (error) {
+      const context = (error as { context?: unknown }).context;
+      if (context instanceof Response) {
+        let errorBody: { error?: unknown; message?: unknown } | null = null;
+        try {
+          errorBody = await context.clone().json();
+        } catch {
+          errorBody = null;
+        }
+        if (typeof errorBody?.error === 'string' && errorBody.error.trim()) throw new Error(errorBody.error);
+        if (typeof errorBody?.message === 'string' && errorBody.message.trim()) throw new Error(errorBody.message);
+      }
+      throw new Error('Não foi possível criar o depósito Pix. Tente novamente.');
+    }
+
+    const result = data as { paymentId?: string; qrCode?: string | null; qrCodeBase64?: string | null; expiresAt?: string };
+    if (!result?.paymentId || !result.expiresAt) throw new Error('A resposta do serviço de pagamento é inválida.');
+    const { data: payment, error: paymentError } = await supabase.from('payments').select('*').eq('id', result.paymentId).eq('user_id', user.id).single();
+    if (paymentError) throw paymentError;
+    const transaction = mapPayment(payment);
+    return {
+      balance: await this.getBalance(),
+      transaction: { ...transaction, status: 'pending' },
+      pixCode: typeof result.qrCode === 'string' ? result.qrCode : undefined,
+      qrCodeBase64: typeof result.qrCodeBase64 === 'string' ? result.qrCodeBase64 : undefined,
+      paymentId: result.paymentId,
+      expiresAt: result.expiresAt,
+    };
+  },
+
+  async getDepositStatus(paymentId: string): Promise<DepositStatus> {
+    const user = await currentUser();
+    const { data, error } = await supabase.from('payments').select('id, status, provider_status, amount, paid_at')
+      .eq('id', paymentId).eq('user_id', user.id).single();
     if (error) throw error;
-    const row = rpcRow(data);
-    const pixCodeValue = row.pix_code ?? row.qr_code ?? row.qrCode;
-    const pixCode = typeof pixCodeValue === 'string' && pixCodeValue.trim() ? pixCodeValue : undefined;
-    const transaction = mapPayment(row);
-    return { balance: await this.getBalance(), transaction: { ...transaction, status: 'pending' }, pixCode };
+    const allowedStatuses: DepositStatus['status'][] = ['pending', 'confirmed', 'canceled', 'failed'];
+    const status = allowedStatuses.includes(data.status as DepositStatus['status'])
+      ? data.status as DepositStatus['status']
+      : 'pending';
+    return { id: data.id, status, paidAt: data.paid_at };
   },
 
   async createWithdrawal(amount: number, pixKeyType: string, pixKey: string): Promise<{ balance: WalletBalance; transaction: UserTransaction }> {

@@ -1,0 +1,1 @@
+ALTER TABLE public.payments ADD CONSTRAINT payments_provider_status_check CHECK (provider_status IS NULL OR provider_status IN ('created', 'paid', 'canceled', 'failed'));

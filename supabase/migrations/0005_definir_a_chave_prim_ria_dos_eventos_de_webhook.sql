@@ -1,0 +1,1 @@
+ALTER TABLE public.payment_webhook_events ADD CONSTRAINT payment_webhook_events_pkey PRIMARY KEY (id);

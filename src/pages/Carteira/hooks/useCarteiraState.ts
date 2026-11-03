@@ -3,6 +3,7 @@ import {
   useWalletBalance,
   useWalletTransactions,
   useDeposit,
+  useDepositStatus,
   useWithdrawal,
 } from '../../../hooks/useWallet';
 import { UserTransaction, WalletTransactionFilter } from '../../../types';
@@ -62,8 +63,19 @@ export function useCarteiraState() {
 
   const [pixTimer, setPixTimer] = useState(15 * 60);
   const [pixCode, setPixCode] = useState<string | undefined>();
+  const [qrCodeBase64, setQrCodeBase64] = useState<string | undefined>();
+  const [paymentId, setPaymentId] = useState<string | undefined>();
+  const [depositError, setDepositError] = useState<string | undefined>();
+  const [isDepositSuccess, setIsDepositSuccess] = useState(false);
+  const depositStatusQuery = useDepositStatus(paymentId);
   const pixIntervalRef = useRef<any>(null);
 
+  useEffect(() => {
+    if (depositStatusQuery.data?.status === 'confirmed') {
+      setIsPixSheetOpen(false);
+      setIsDepositSuccess(true);
+    }
+  }, [depositStatusQuery.data?.status]);
 
   const handleDepositInput = (val: string) => {
     setDepositAmount(val);
@@ -80,15 +92,23 @@ export function useCarteiraState() {
       setIsDepositModalOpen(false);
       setIsPixSheetOpen(true);
       setPixCode(undefined);
+      setQrCodeBase64(undefined);
+      setPaymentId(undefined);
+      setDepositError(undefined);
+      setIsDepositSuccess(false);
       setPixTimer(15 * 60);
       clearInterval(pixIntervalRef.current);
       pixIntervalRef.current = setInterval(() => {
         setPixTimer((prev) => prev - 1);
       }, 1000);
       depositMutation.mutate(val, {
-        onSuccess: (result) => setPixCode(result.pixCode),
-        onError: () => {
-          setIsPixSheetOpen(false);
+        onSuccess: (result) => {
+          setPixCode(result.pixCode);
+          setQrCodeBase64(result.qrCodeBase64);
+          setPaymentId(result.paymentId);
+        },
+        onError: (error) => {
+          setDepositError(error instanceof Error ? error.message : 'Não foi possível criar o depósito Pix.');
           clearInterval(pixIntervalRef.current);
         },
       });
@@ -96,12 +116,14 @@ export function useCarteiraState() {
   };
 
   useEffect(() => {
-    if (pixTimer <= 0) {
-      clearInterval(pixIntervalRef.current);
-    }
-    return () => clearInterval(pixIntervalRef.current);
+    if (pixTimer <= 0) clearInterval(pixIntervalRef.current);
   }, [pixTimer]);
 
+  useEffect(() => {
+    if (!isPixSheetOpen) clearInterval(pixIntervalRef.current);
+  }, [isPixSheetOpen]);
+
+  useEffect(() => () => clearInterval(pixIntervalRef.current), []);
 
   const setWithdrawMax = () => {
     if (balance) {
@@ -169,6 +191,11 @@ export function useCarteiraState() {
     handleWithdrawKeyChange,
     pixTimer,
     pixCode,
+    qrCodeBase64,
+    paymentId,
+    depositStatus: depositStatusQuery.data?.status,
+    depositError,
+    isDepositSuccess,
     handleDepositInput,
     addDepositQuick,
     generatePixPayment,

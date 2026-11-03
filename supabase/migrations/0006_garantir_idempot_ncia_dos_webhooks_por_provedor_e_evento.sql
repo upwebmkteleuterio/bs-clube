@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX IF NOT EXISTS payment_webhook_events_provider_event_key_idx ON public.payment_webhook_events (provider, event_key);

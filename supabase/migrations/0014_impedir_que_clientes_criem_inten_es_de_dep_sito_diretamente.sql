@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.create_deposit_intent(uuid, numeric) FROM PUBLIC;

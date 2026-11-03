@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS payments_status_created_at_idx ON public.payments (status, created_at DESC);
