@@ -33,8 +33,13 @@ serve(async (req) => {
     console.error('[pushinpay-webhook] PUSHINPAY_WEBHOOK_TOKEN não configurado.');
     return jsonResponse({ error: 'Token de webhook não configurado no servidor.' }, 500);
   }
-  const receivedToken = req.headers.get('x-pushinpay-token') ?? '';
-  if (!tokensMatch(receivedToken, webhookToken)) {
+  // A PushinPay pode enviar o token de duas formas: no header próprio
+  // `x-pushinpay-token` (documentado) ou no header `Authorization` configurado no
+  // painel, com ou sem o prefixo "Bearer ". Aceitamos ambos.
+  const headerToken = (req.headers.get('x-pushinpay-token') ?? '').trim();
+  const authorizationToken = (req.headers.get('Authorization') ?? '').replace(/^Bearer\s+/i, '').trim();
+  const receivedToken = headerToken || authorizationToken;
+  if (!receivedToken || !tokensMatch(receivedToken, webhookToken)) {
     console.error('[pushinpay-webhook] Token de webhook inválido.');
     return jsonResponse({ error: 'Não autorizado.' }, 401);
   }
@@ -52,14 +57,20 @@ serve(async (req) => {
   } catch {
     return jsonResponse({ error: 'Corpo do webhook inválido.' }, 400);
   }
+  const eventPayload = Object.fromEntries(form.entries());
   const id = form.get('id');
   const status = form.get('status');
-  if (!id || !status) return jsonResponse({ error: 'Identificador e status são obrigatórios.' }, 400);
+  if (!id || !status) {
+    // O painel da PushinPay faz um POST de teste ao salvar o webhook, e também há
+    // eventos que não são de cobrança (ex.: MED/infração). Como o token já foi
+    // validado, apenas confirmamos o recebimento para não gerar retentativas.
+    console.log('[pushinpay-webhook] Evento não reconhecido, recebimento confirmado. Campos:', Object.keys(eventPayload).join(','));
+    return jsonResponse({ received: true, ignored: true });
+  }
 
   const eventType = form.has('pix_key') || form.has('receiver_national_registration') ? 'pix_cashout' : 'pix_cashin';
   const valueText = form.get('value');
   const amountCents = valueText ? Number(valueText) : null;
-  const eventPayload = Object.fromEntries(form.entries());
   const serviceClient = createClient(supabaseUrl, serviceRoleKey);
   const eventKey = `${id}:${status}`;
   const { error: insertError } = await serviceClient.from('payment_webhook_events').insert({
